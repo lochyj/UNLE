@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCNL Testing</title>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.x/dist/pixi.min.js"></script>
+</head>
+<body>
+    <script defer>
+        // TODO: Fix this later
+        let dragTarget = null;
+
+        function onDragMove(event) {
+            if (dragTarget) {
+                dragTarget.parent.toLocal(event.global, null, dragTarget.position);
+                drawLines();
+            }
+        }
+
+        function onDragStart() {
+            // store a reference to the data
+            // the reason for this is because of multitouch
+            // we want to track the movement of this particular touch
+            // this.data = event.data;
+            this.alpha = 0.5;
+            dragTarget = this;
+            app.stage.on('pointermove', onDragMove);
+        }
+
+        function onDragEnd() {
+            if (dragTarget) {
+                app.stage.off('pointermove', onDragMove);
+                dragTarget.alpha = 1;
+                dragTarget = null;
+            }
+        }
+    </script>
+    <script>
+        const app = new PIXI.Application({ antialias: true });
+        document.body.appendChild(app.view);
+
+        // This is supposed to be deprecated... Find a better way to do this.
+        app.stage.interactive = true;
+        //
+        app.stage.hitArea = app.screen;
+        app.stage.on('pointerup', onDragEnd);
+        app.stage.on('pointerupoutside', onDragEnd);
+
+        // The containers are ordered as such that the lines are drawn underneath the nodes.
+        const LinesContainer = new PIXI.Container();
+        app.stage.addChild(LinesContainer);
+        const NodesContainer = new PIXI.Container();
+        app.stage.addChild(NodesContainer);
+
+        createNode(100, 100, 50)
+        createNode(300, 300, 20)
+        createNode(500, 100, 100)
+        createNode(100, 400, 20)
+
+
+        drawLines()
+
+        function createNode(x, y, rad /*, colour, text*/) {
+            const node = new PIXI.Graphics();
+            node.lineStyle(1, 0xFFFFFF, 1);
+            node.beginFill(0x2e2e2e, 1);
+            node.drawCircle(x, y, rad);
+            node.endFill();
+            node.interactive = true;
+            node.on('pointerdown', onDragStart, node);
+            node.x = x;
+            node.y = y;
+            node.pivot.x = x;
+            node.pivot.y = y;
+            NodesContainer.addChild(node);
+            return node;
+        }
+
+        function drawLine(x1, y1, x2, y2, width /*, colour*/) {
+            const line = new PIXI.Graphics();
+            line.lineStyle(width, 0xFFFFFF, 1);
+            line.moveTo(x1, y1);
+            line.lineTo(x2, y2);
+            LinesContainer.addChild(line);
+            return line;
+        }
+
+        // Implement this fully later
+        function drawLines() {
+            LinesContainer.removeChildren();
+            var last = {}
+            for(var i = 0; i < app.stage.children[1].children.length; i++) {
+                if (last == null)
+                    continue;
+                drawLine(last.x, last.y, app.stage.children[1].children[i].x, app.stage.children[1].children[i].y, 1)
+                last.x = app.stage.children[1].children[i].x
+                last.y = app.stage.children[1].children[i].y
+            }
+        }
+    </script>
+    
+</body>
+</html>
