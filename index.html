@@ -6,12 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WCNL Testing</title>
     <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.x/dist/pixi.min.js"></script>
+    <style>
+        
+
+        #canvas {
+            max-width: 720px;
+            max-height: 720px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
-    <div id="canvas" style="max-width: 200px; max-height: 200px;"></div>
+    <div id="canvas"></div>
     <script defer>
         // TODO: Fix this later
         let dragTarget = null;
+
+        var testEdges = [
+                [0, 1, 0xFFF00F],
+                [1, 2, 0x0FF00F],
+                [1, 3, 0xDaFa],
+                [2, 3, 0xF0000F],
+                [2, 0, 0xFF00FF],
+                [3, 0, 0xAEE0FF]
+            ]
 
         function onDragMove(event) {
             if (dragTarget) {
@@ -34,12 +56,17 @@
             if (dragTarget) {
                 app.stage.off('pointermove', onDragMove);
                 dragTarget.alpha = 1;
+                // Testing:
+                //console.log(dragTarget)
                 dragTarget = null;
             }
         }
     </script>
     <script>
-        const app = new PIXI.Application({ antialias: true });
+        const app = new PIXI.Application({
+            resolution: 2,
+            antialias: true
+        });
         document.getElementById("canvas").appendChild(app.view);
 
         // This is supposed to be deprecated... Find a better way to do this.
@@ -55,17 +82,17 @@
         const NodesContainer = new PIXI.Container();
         app.stage.addChild(NodesContainer);
 
-        for(var i = 0; i < 200; i++) {
-            createNode(100, 100, 20)
+        for(var i = 0; i < 4; i++) {
+            createNode(100, 100, 30, 0x000000 | Math.random() * 0xFFFFFF)
         }
 
 
         drawLines()
 
-        function createNode(x, y, rad /*, colour, text*/) {
+        function createNode(x, y, rad, colour /*, text*/) {
             const node = new PIXI.Graphics();
-            node.lineStyle(1, 0xFFFFFF, 1);
-            node.beginFill(0x2e2e2e, 1);
+            node.lineStyle(2, 0xa0a0a0 | colour, 1);
+            node.beginFill(colour, 1);
             node.drawCircle(x, y, rad);
             node.endFill();
             node.interactive = true;
@@ -78,26 +105,36 @@
             return node;
         }
 
-        function drawLine(x1, y1, x2, y2, width /*, colour*/) {
+        function drawLine(x1, y1, x2, y2, width, colour) {
             const line = new PIXI.Graphics();
-            line.lineStyle(width, 0xFFFFFF, 1);
+            line.lineStyle(width, colour, 1);
             line.moveTo(x1, y1);
             line.lineTo(x2, y2);
             LinesContainer.addChild(line);
             return line;
         }
 
+        
+
         // Implement this fully later
         function drawLines() {
             LinesContainer.removeChildren();
-            var last = {}
+            for (var i = 0; i < testEdges.length; i++) {
+                drawLine(
+                    app.stage.children[1].children[testEdges[i][0]].x,
+                    app.stage.children[1].children[testEdges[i][0]].y,
+                    app.stage.children[1].children[testEdges[i][1]].x,
+                    app.stage.children[1].children[testEdges[i][1]].y,
+                    2,
+                    0x000000 | testEdges[i][2]
+                )
+            }
+            /*var last = {}
             for(var i = 0; i < app.stage.children[1].children.length; i++) {
-                if (last == null)
-                    continue;
                 drawLine(last.x, last.y, app.stage.children[1].children[i].x, app.stage.children[1].children[i].y, 1)
                 last.x = app.stage.children[1].children[i].x
                 last.y = app.stage.children[1].children[i].y
-            }
+            }*/
         }
     </script>
     
