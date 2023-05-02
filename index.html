@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.x/dist/pixi.min.js"></script>
 </head>
 <body>
+    <div id="canvas" style="max-width: 200px; max-height: 200px;"></div>
     <script defer>
         // TODO: Fix this later
         let dragTarget = null;
@@ -39,7 +40,7 @@
     </script>
     <script>
         const app = new PIXI.Application({ antialias: true });
-        document.body.appendChild(app.view);
+        document.getElementById("canvas").appendChild(app.view);
 
         // This is supposed to be deprecated... Find a better way to do this.
         app.stage.interactive = true;
@@ -54,10 +55,9 @@
         const NodesContainer = new PIXI.Container();
         app.stage.addChild(NodesContainer);
 
-        createNode(100, 100, 50)
-        createNode(300, 300, 20)
-        createNode(500, 100, 100)
-        createNode(100, 400, 20)
+        for(var i = 0; i < 200; i++) {
+            createNode(100, 100, 20)
+        }
 
 
         drawLines()
