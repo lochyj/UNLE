@@ -7,7 +7,11 @@
     <title>WCNL Testing</title>
     <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.x/dist/pixi.min.js"></script>
     <style>
-        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
 
         #canvas {
             max-width: 720px;
@@ -17,6 +21,7 @@
         canvas {
             width: 100%;
             height: 100%;
+            display: block;
         }
     </style>
 </head>
@@ -27,12 +32,12 @@
         let dragTarget = null;
 
         var testEdges = [
-                [0, 1, 0xFFF00F],
-                [1, 2, 0x0FF00F],
-                [1, 3, 0xDaFa],
-                [2, 3, 0xF0000F],
-                [2, 0, 0xFF00FF],
-                [3, 0, 0xAEE0FF]
+                [0, 1, 0xFFFFFF],
+                [1, 2, 0xFFFFFF],
+                [1, 3, 0xFFFFFF],
+                [2, 3, 0xFFFFFF],
+                [2, 0, 0xFFFFFF],
+                [3, 0, 0xFFFFFF]
             ]
 
         function onDragMove(event) {
@@ -59,6 +64,8 @@
                 // Testing:
                 //console.log(dragTarget)
                 dragTarget = null;
+
+                applyCollisions()
             }
         }
     </script>
@@ -83,9 +90,10 @@
         app.stage.addChild(NodesContainer);
 
         for(var i = 0; i < 4; i++) {
-            createNode(100, 100, 30, 0x000000 | Math.random() * 0xFFFFFF)
+            createNode(100, 100, 30, 0x2A2A2A)
         }
 
+        applyCollisions()
 
         drawLines()
 
@@ -135,6 +143,35 @@
                 last.x = app.stage.children[1].children[i].x
                 last.y = app.stage.children[1].children[i].y
             }*/
+        }
+
+        function applyCollisions() {
+            for (var x = 0; x < 4; x++) {
+                for (var i = 0; i < NodesContainer.children.length; i++) {
+                    for (var j = 0; j < NodesContainer.children.length; j++) {
+                        if (i != j) {
+                            var a = NodesContainer.children[i]
+                            var b = NodesContainer.children[j]
+                            var dx = b.x - a.x
+                            var dy = b.y - a.y
+                            var dist = Math.sqrt(dx * dx + dy * dy)
+                            var minDist = a.width / 2 + b.width / 2
+                            if (dist < minDist) {
+                                var angle = Math.atan2(dy, dx)
+                                var tx = a.x + Math.cos(angle) * minDist
+                                var ty = a.y + Math.sin(angle) * minDist
+                                var ax = (tx - b.x) * 0.5
+                                var ay = (ty - b.y) * 0.5
+                                a.x -= ax
+                                a.y -= ay
+                                b.x += ax
+                                b.y += ay
+                            }
+    
+                        }
+                    }
+                }
+            }
         }
     </script>
     
