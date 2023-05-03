@@ -1,0 +1,13 @@
+Rotary Viper's ideas:
+Keep collision detection code from earlier. Just make it move slower
+
+
+Have a base shape for the nodes
+
+If a node is dragged, check how many node are connected to it.
+Pull nodes with it in the same direction, just at a slower speed.
+
+Important part below:
+If a node is released:
+1. Calculate the center point for all connected nodes
+2. All nodes will travel to this center point until all nodes are close enough to the center point
