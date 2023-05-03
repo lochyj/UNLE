@@ -125,24 +125,27 @@
             testEdges[i][2] = randomEdgePower();
         }
         
-        applyCollisions();
         applyEdgePower();
         constrainToBounds();
         applyCollisions();
         drawLines();
 
         function createNode(x, y, rad, colour /*, text*/) {
-            const node = new PIXI.Graphics();
-            node.lineStyle(2, 0xa0a0a0 | colour, 1);
-            node.beginFill(colour, 1);
-            node.drawCircle(x, y, rad);
-            node.endFill();
+
+            // Replaced graphics with sprite for faster rendering
+            const nodeG = new PIXI.Graphics();
+            nodeG.lineStyle(2, 0xa0a0a0 | colour, 1);
+            nodeG.beginFill(colour, 1);
+            nodeG.drawCircle(0, 0, rad);
+            nodeG.endFill();
+            const nodeT = app.renderer.generateTexture(nodeG);
+            const node = new PIXI.Sprite(nodeT);
+            node.anchor.set(0.5);
+
             node.interactive = true;
             node.on('pointerdown', onDragStart, node);
             node.x = x;
             node.y = y;
-            node.pivot.x = x;
-            node.pivot.y = y;
             NodesContainer.addChild(node);
             return node;
         }
@@ -218,7 +221,7 @@
                     if (dist > edgeLen * 0.9 && dist < edgeLen * 1.1) continue
 
                     var diff = edgeLen - dist
-                    var percent = diff / dist / 2
+                    var percent = (diff)/ (dist*10000000000**0.2)
 
                     var offsetX = dx * percent
                     var offsetY = dy * percent
