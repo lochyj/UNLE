@@ -31,19 +31,23 @@
         // TODO: Fix this later
         let dragTarget = null;
 
+        const numNodes = 6;
+        
         var testEdges = [
             [0, 1, 0],
             [1, 2, 0],
             [2, 3, 0],
-            [4, 0, 0],
-            [5, 0, 0],
+            [5, 1, 0],
+            [5, 4, 0],
         ]
 
         var nodesEdgeNum = [
+            2,
             3,
             2,
-            2,
             1,
+            2,
+            2,
         ]
 
         /*This is equal to 10000000000^0.16
@@ -109,8 +113,9 @@
 
         async function main() {
             while (true) {
-                if (noDiff && !noDiff){
+                if (noDiff){
                     await sleep(10);
+                    console.log("waiting!")
                     continue;
                 } else if (shouldLock) {
                     dragTarget.x = locked.x;
@@ -145,7 +150,7 @@
             font: "bold 64px Roboto", // Set  style, size and font
             fill: '#FFFFFF', // Set fill color to blue
             align: 'center', // Center align the text, since it's multiline
-            stroke: '#34495e', // Set stroke color to a dark blue gray color
+            stroke: '#000000', // Set stroke color to a dark blue gray color
             strokeThickness: 2, // Set stroke thickness to 20
             lineJoin: 'round' // Set the lineJoin to round
         }
@@ -187,7 +192,7 @@
         }
 
 
-        for(var i = 0; i < 6; i++) {
+        for(var i = 0; i < numNodes; i++) {
             createNode(randomX(), randomY(), 20, 0x3A3A3A, i)
         }
 
@@ -312,7 +317,7 @@
 
                     var diff = edgeLen - dist
 
-                    var percent = (diff) / (dist * constant)
+                    var percent = diff / (dist * constant)
 
                     var offsetX = dx * percent
                     var offsetY = dy * percent
@@ -345,8 +350,12 @@
         }
 
         function spaceEdgesOnNode() {
-            for(var i = 0; i < nodesEdgeNum.length; i++) {
-                var angle = 360 / nodesEdgeNum[i]
+            for (var i = 0; i < nodesEdgeNum.length; i++) {
+                if (nodesEdgeNum[i] == 0) {
+                    var angle = 360;
+                } else {
+                    var angle = 360 / nodesEdgeNum[i];
+                }
                 var connectedNodes = []
                 for (var k = 0; k < testEdges.length; k++) {
                     if (testEdges[k][0] == i && testEdges[k][1] != i) {
@@ -356,33 +365,37 @@
                     }
                 }
 
-                angles = Array(nodesEdgeNum[i])
+                // Initialize the angles array to house all of the possible angles for degrees of the vertex / node.
+                var angles = Array(nodesEdgeNum[i]);
 
                 for (var j = 0; j < nodesEdgeNum[i]; j++) {
                     angles[j] = angle * j;
                 }
 
                 for (var j = 0; j < connectedNodes.length; j++) {
-                    // get the distance between the two nodes
-                    var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j][0]].x
-                    var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j][0]].y
-                    // instead of getting the distance from the nodes, get the distance from the edge length
-                    var dist = connectedNodes[j][1]
+
+                    var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j][0]].x;
+                    var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j][0]].y;
+                    var dist = connectedNodes[j][1];
+
+                    //var currentAngle = toDegrees(Math.atan2(dy, dx));
 
                     //var closestAngle = Math.abs(Math.round(currentAngle / angle) * angle)
+
+                    // find the index of the closest angle in angles to the current angle
                     
-                    var offsetX = dist * Math.sin(toRadians(angles[j])) / constant
-                    var offsetY = dist * Math.cos(toRadians(angles[j])) / constant
+                    var offsetX = (dist) * Math.sin(toRadians(angles[j])) / constant;
+                    var offsetY = (dist) * Math.cos(toRadians(angles[j])) / constant;
 
                     // move the node towards the position
-                    NodesContainer.children[connectedNodes[j][0]].x += offsetX
-                    NodesContainer.children[connectedNodes[j][0]].y += offsetY
+                    NodesContainer.children[connectedNodes[j][0]].x += offsetX;
+                    NodesContainer.children[connectedNodes[j][0]].y += offsetY;
 
                     // now move the current node in the opposite angle to the position
-                    NodesContainer.children[i].x -= offsetX
-                    NodesContainer.children[i].y -= offsetY
+                    NodesContainer.children[i].x -= offsetX;
+                    NodesContainer.children[i].y -= offsetY;
                     
-                }          
+                }
             }
         }
     </script>
