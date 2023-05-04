@@ -91,11 +91,13 @@
                 //console.log(dragTarget)
                 dragTarget = null;
 
+                /* Redundant by main function
                 applyEdgePower();
                 spaceEdgesOnNode();
                 constrainToBounds();
                 applyCollisions();
                 drawLines();
+                */
                 shouldLock = false;
             }
         }
@@ -114,7 +116,7 @@
         async function main() {
             while (true) {
                 if (noDiff){
-                    await sleep(10);
+                    await sleep(16);
                     console.log("waiting!")
                     continue;
                 } else if (shouldLock) {
@@ -126,7 +128,7 @@
                 constrainToBounds();
                 applyCollisions();
                 drawLines();
-                await sleep(10);
+                await sleep(16);
             }
         }
 
@@ -144,6 +146,13 @@
             antialias: true
         });
 
+        //This is neccessary to reuse the same texture for a simple line
+        const lineG = new PIXI.Graphics();
+        lineG.beginFill(0xFFFFFF, 1);
+        lineG.drawRect(0,0,1,1);
+        lineG.endFill();
+        const lineT = app.renderer.generateTexture(lineG);
+
         // TODO: rename all "node" to "vertex"
 
         var textOptions = {
@@ -158,7 +167,7 @@
         document.getElementById("canvas").appendChild(app.view);
 
         // This is supposed to be deprecated... Find a better way to do this.
-        app.stage.interactive = true;
+        app.stage.eventMode = 'dynamic'; // Changed interactive to eventMode
         //
         app.stage.hitArea = app.screen;
         app.stage.on('pointerup', onDragEnd);
@@ -200,11 +209,13 @@
             testEdges[i][2] = 100;
         }
         
+        /* Redundant by main function
         applyEdgePower();
         constrainToBounds();
         applyCollisions();
         drawLines();
         spaceEdgesOnNode();
+        */
 
         main();
 
@@ -216,17 +227,21 @@
             nodeG.beginFill(colour, 1);
             nodeG.drawCircle(0, 0, rad);
             nodeG.endFill();
-            const nodeT = app.renderer.generateTexture(nodeG);
+
+            // Moved text into texture
+            const annotation = new PIXI.Text(text, textOptions);
+            annotation.anchor.set(0.5); 
+
+
+            const nodeContainer = new PIXI.Container();
+            nodeContainer.addChild(nodeG);
+            nodeContainer.addChild(annotation);
+
+            const nodeT = app.renderer.generateTexture(nodeContainer);
             const node = new PIXI.Sprite(nodeT);
             node.anchor.set(0.5);
 
-            var annotation = new PIXI.Text(text, textOptions);
-
-            annotation.anchor.set(0.5); 
-
-            node.addChild(annotation);
-
-            node.interactive = true;
+            node.eventMode = 'dynamic'; // Changed interactive to eventMode
             node.on('pointerdown', onDragStart, node);
             node.x = x;
             node.y = y;
@@ -235,11 +250,22 @@
         }
 
         // TODO: add line styles such as a directed line (just an arrow going from one node to another)
+
+        // Implementing arrows with textured sprites is quite complicated
+
         function drawLine(x1, y1, x2, y2, width, colour, value) {
-            const line = new PIXI.Graphics();
-            line.lineStyle(width, colour, 1);
-            line.moveTo(x1, y1);
-            line.lineTo(x2, y2);
+            const dx = x2-x1;
+            const dy = y2-y1;
+
+            const line = new PIXI.Sprite(lineT);
+            line.x = x2;
+            line.y = y2;
+            line.height = Math.sqrt((dx)**2 + (dy)**2);
+            line.width = width;
+
+            line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
+
+            app.stage.addChild(line);
 
             //var annotation = new PIXI.Text(value, textOptions);
             //annotation.anchor.set(0.5);
@@ -272,20 +298,31 @@
                         if (i != j) {
                             var a = NodesContainer.children[i]
                             var b = NodesContainer.children[j]
-                            var dx = b.x - a.x
-                            var dy = b.y - a.y
+                            var dx = Math.abs(b.x - a.x)
+                            var dy = Math.abs(b.y - a.y)
                             var dist = Math.sqrt(dx * dx + dy * dy)
                             var minDist = a.width / 2 + b.width / 2
-                            if (dist < minDist) {
-                                var angle = Math.atan2(dy, dx)
-                                var tx = a.x + Math.cos(angle) * minDist
-                                var ty = a.y + Math.sin(angle) * minDist
-                                var ax = (tx - b.x) * 0.5
-                                var ay = (ty - b.y) * 0.5
-                                a.x -= ax
-                                a.y -= ay
-                                b.x += ax
-                                b.y += ay
+                            if (dist < minDist) { 
+                                //If a is to the left of b
+                                if (a.x < b.x) {
+                                    a.x -= dx*.01
+                                    b.x += dx*.01
+                                }
+                                // If a is to the right of b
+                                if (a.x > b.x) {
+                                    a.x += dx*.01
+                                    b.x -= dx*.01
+                                }
+                                // If a is above b
+                                if (a.y < b.y) {
+                                    a.y -= dy*.01
+                                    b.y += dy*.01
+                                }
+                                // If a is below b
+                                if (a.y > b.y) {
+                                    a.y += dy*.01
+                                    b.y -= dy*.01
+                                }
                             }
                         }
                     }
