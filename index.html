@@ -35,14 +35,15 @@
             [0, 1, 0],
             [1, 2, 0],
             [2, 3, 0],
-            //[3, 0, 0],
+            [4, 0, 0],
+            [5, 0, 0],
         ]
 
         var nodesEdgeNum = [
+            3,
+            2,
+            2,
             1,
-            2,
-            2,
-            1
         ]
 
         /*This is equal to 10000000000^0.16
@@ -58,10 +59,10 @@
             locked.x = dragTarget.x;
             locked.y = dragTarget.y;
             applyEdgePower();
+            spaceEdgesOnNode();
             constrainToBounds();
             applyCollisions();
             drawLines();
-            spaceEdgesOnNode();
             
         }
 
@@ -87,10 +88,10 @@
                 dragTarget = null;
 
                 applyEdgePower();
+                spaceEdgesOnNode();
                 constrainToBounds();
                 applyCollisions();
                 drawLines();
-                spaceEdgesOnNode();
                 shouldLock = false;
             }
         }
@@ -116,12 +117,20 @@
                     dragTarget.y = locked.y;
                 }
                 applyEdgePower();
+                spaceEdgesOnNode();
                 constrainToBounds();
                 applyCollisions();
                 drawLines();
-                spaceEdgesOnNode();
                 await sleep(10);
             }
+        }
+
+        function toDegrees(angle) {
+            return angle * (180 / Math.PI);
+        }
+
+        function toRadians(angle) {
+            return angle * (Math.PI / 180);
         }
     </script>
     <script>
@@ -178,7 +187,7 @@
         }
 
 
-        for(var i = 0; i < 4; i++) {
+        for(var i = 0; i < 6; i++) {
             createNode(randomX(), randomY(), 20, 0x3A3A3A, i)
         }
 
@@ -336,80 +345,44 @@
         }
 
         function spaceEdgesOnNode() {
-            /*for (var i = 0; i < testEdges.length; i++) {
-                if (nodesEdgeNum[i] == undefined) {
-                    nodesEdgeNum[i] = []
-                }
-                nodesEdgeNum[i][testEdges[i][0]] += testEdges[i][1]
-                console.log(testEdges[i][1])
-            }
-            for (var i = 0; i < testEdges.length; i++) {
-                if (nodesEdgeNum[i] == undefined) {
-                    nodesEdgeNum[i] = []
-                }
-                nodesEdgeNum[i][testEdges[i][1]] += testEdges[i][0]
-                console.log(testEdges[i][0])
-            }*/
-            for (var x = 0; x < 1; x++) {
-                for(var i = 0; i < nodesEdgeNum.length; i++) {
-                    // use the following formula to calculate the angle between each edge and then space them out
-                    //x = r sin(d)
-                    //y = r cos(d)
-                    // where d is the angle between each edge
-                    // and r is the distance between each node
-                    var angle = 360 / (nodesEdgeNum[i] * 2)
-                    var connectedNodes = []
-                    for (var k = 0; k < testEdges.length; k++) {
-                        if (testEdges[k][0] == i && testEdges[k][1] != i) {
-                            connectedNodes.push([testEdges[k][1], testEdges[k][2]])
-                        } else if (testEdges[k][1] == i && testEdges[k][0] != i) {
-                            connectedNodes.push([testEdges[k][0], testEdges[k][2]])
-                        }
+            for(var i = 0; i < nodesEdgeNum.length; i++) {
+                var angle = 360 / nodesEdgeNum[i]
+                var connectedNodes = []
+                for (var k = 0; k < testEdges.length; k++) {
+                    if (testEdges[k][0] == i && testEdges[k][1] != i) {
+                        connectedNodes.push([testEdges[k][1], testEdges[k][2]])
+                    } else if (testEdges[k][1] == i && testEdges[k][0] != i) {
+                        connectedNodes.push([testEdges[k][0], testEdges[k][2]])
                     }
-
-                    //TEMP!
-                    //angle = 90
-
-                    if (nodesEdgeNum.length < 2)
-                        continue;
-
-                    for (var j = 0; j < connectedNodes.length; j++) {
-
-                        var tempAngle = angle * (j + 1);
-
-                        // convert tempAngle to radians
-                        tempAngle = tempAngle * Math.PI / 180
-
-                        // get the distance between the two nodes
-                        var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j][0]].x
-                        var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j][0]].y
-                        // instead of getting the distance from the nodes, get the distance from the edge length
-                        var dist = connectedNodes[j][1]
-
-                        // get the current angle of the node in degrees
-                        var currentAngle = Math.atan2(dy, dx)
-                        currentAngle = currentAngle * 180 / Math.PI
-
-                        // find the angle closest to a modulo of angle and current angle
-                        // for example if the angle is 90 and the current angle is 100, the closest angle would be 90 or if the angle is 90 and the current angle is 170, the closest angle would be 180
-                        var closestAngle = Math.abs(Math.round(currentAngle / angle) * angle)
-
-                        console.log(closestAngle)
-                        
-                        // get the position of temp angle on the circle
-                        var offsetX = dist * Math.sin(closestAngle) / constant
-                        var offsetY = dist * Math.cos(closestAngle) / constant
-
-                        // move the node towards the position
-                        NodesContainer.children[connectedNodes[j][0]].x += offsetX
-                        NodesContainer.children[connectedNodes[j][0]].y += offsetY
-
-                        // now move the current node in the opposite angle to the position
-                        NodesContainer.children[i].x -= offsetX
-                        NodesContainer.children[i].y -= offsetY
-                        
-                    }          
                 }
+
+                angles = Array(nodesEdgeNum[i])
+
+                for (var j = 0; j < nodesEdgeNum[i]; j++) {
+                    angles[j] = angle * j;
+                }
+
+                for (var j = 0; j < connectedNodes.length; j++) {
+                    // get the distance between the two nodes
+                    var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j][0]].x
+                    var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j][0]].y
+                    // instead of getting the distance from the nodes, get the distance from the edge length
+                    var dist = connectedNodes[j][1]
+
+                    //var closestAngle = Math.abs(Math.round(currentAngle / angle) * angle)
+                    
+                    var offsetX = dist * Math.sin(toRadians(angles[j])) / constant
+                    var offsetY = dist * Math.cos(toRadians(angles[j])) / constant
+
+                    // move the node towards the position
+                    NodesContainer.children[connectedNodes[j][0]].x += offsetX
+                    NodesContainer.children[connectedNodes[j][0]].y += offsetY
+
+                    // now move the current node in the opposite angle to the position
+                    NodesContainer.children[i].x -= offsetX
+                    NodesContainer.children[i].y -= offsetY
+                    
+                }          
             }
         }
     </script>
