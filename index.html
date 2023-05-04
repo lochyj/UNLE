@@ -32,12 +32,17 @@
         let dragTarget = null;
 
         var testEdges = [
-            [1, 0, 0],
+            [0, 1, 0],
+            [1, 2, 0],
+            [2, 3, 0],
+            //[3, 0, 0],
         ]
 
         var nodesEdgeNum = [
             1,
-            1,
+            2,
+            2,
+            1
         ]
 
         /*This is equal to 10000000000^0.16
@@ -103,7 +108,7 @@
 
         async function main() {
             while (true) {
-                if (noDiff){
+                if (noDiff && !noDiff){
                     await sleep(10);
                     continue;
                 } else if (shouldLock) {
@@ -298,7 +303,7 @@
 
                     var diff = edgeLen - dist
 
-                    var percent = (diff)/ (dist* constant)
+                    var percent = (diff) / (dist * constant)
 
                     var offsetX = dx * percent
                     var offsetY = dy * percent
@@ -352,47 +357,56 @@
                     //y = r cos(d)
                     // where d is the angle between each edge
                     // and r is the distance between each node
-                    var angle = 360 / nodesEdgeNum[i]
+                    var angle = 360 / (nodesEdgeNum[i] * 2)
                     var connectedNodes = []
                     for (var k = 0; k < testEdges.length; k++) {
                         if (testEdges[k][0] == i && testEdges[k][1] != i) {
-                            connectedNodes.push(testEdges[k][1])
+                            connectedNodes.push([testEdges[k][1], testEdges[k][2]])
                         } else if (testEdges[k][1] == i && testEdges[k][0] != i) {
-                            connectedNodes.push(testEdges[k][0])
+                            connectedNodes.push([testEdges[k][0], testEdges[k][2]])
                         }
                     }
 
-                    console.log(connectedNodes)
+                    //TEMP!
+                    //angle = 90
+
+                    if (nodesEdgeNum.length < 2)
+                        continue;
 
                     for (var j = 0; j < connectedNodes.length; j++) {
-                        if (i%2) {
-                            var tempAngle = angle * j;
-                        } else {
-                            var tempAngle = -180 + angle * j;
-                        }
+
+                        var tempAngle = angle * (j + 1);
+
+                        // convert tempAngle to radians
+                        tempAngle = tempAngle * Math.PI / 180
 
                         // get the distance between the two nodes
-                        var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j]].x
-                        var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j]].y
-                        var dist = Math.sqrt(dx * dx + dy * dy)
+                        var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j][0]].x
+                        var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j][0]].y
+                        // instead of getting the distance from the nodes, get the distance from the edge length
+                        var dist = connectedNodes[j][1]
 
                         // get the current angle of the node in degrees
                         var currentAngle = Math.atan2(dy, dx)
                         currentAngle = currentAngle * 180 / Math.PI
 
-                        console.log(`angles curr: ${currentAngle}, temp: ${tempAngle}`)
+                        // find the angle closest to a modulo of angle and current angle
+                        // for example if the angle is 90 and the current angle is 100, the closest angle would be 90 or if the angle is 90 and the current angle is 170, the closest angle would be 180
+                        var closestAngle = Math.abs(Math.round(currentAngle / angle) * angle)
+
+                        console.log(closestAngle)
                         
                         // get the position of temp angle on the circle
-                        var offsetX = dist * Math.sin(tempAngle) / constant
-                        var offsetY = dist * Math.cos(tempAngle) / constant
-
-                        console.log(`${dist * Math.sin(tempAngle)}, ${dist * Math.cos(tempAngle)}`)
-
-                        //console.log(`${offsetX}, ${offsetY}`)
+                        var offsetX = dist * Math.sin(closestAngle) / constant
+                        var offsetY = dist * Math.cos(closestAngle) / constant
 
                         // move the node towards the position
-                        NodesContainer.children[connectedNodes[j]].x += offsetX * 0.2
-                        NodesContainer.children[connectedNodes[j]].y += offsetY * 0.2
+                        NodesContainer.children[connectedNodes[j][0]].x += offsetX
+                        NodesContainer.children[connectedNodes[j][0]].y += offsetY
+
+                        // now move the current node in the opposite angle to the position
+                        NodesContainer.children[i].x -= offsetX
+                        NodesContainer.children[i].y -= offsetY
                         
                     }          
                 }
