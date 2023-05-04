@@ -32,29 +32,32 @@
         let dragTarget = null;
 
         var testEdges = [
-                [1, 0, 0],
-                [2, 0, 0],
-                [3, 0, 0],
-                [4, 0, 0],
-                [5, 0, 0],
-                [6, 0, 0],
-                [7, 0, 0],
-                [8, 0, 0],
-                [9, 0, 0],
-                [10, 0, 0],
-                [11, 0, 0],
-            ]
+            [1, 0, 0],
+        ]
+
+        var nodesEdgeNum = [
+            1,
+            1,
+        ]
+
+        /*This is equal to 10000000000^0.16
+        The reason it is in its own variable is to reduce the amount of processing in this function.
+        To change it just recalculate it.*/
+        const constant = 39.8107170553
 
         function onDragMove(event) {
-            if (dragTarget) {
-                dragTarget.parent.toLocal(event.global, null, dragTarget.position);
-                locked.x = dragTarget.x;
-                locked.y = dragTarget.y;
-                applyEdgePower();
-                constrainToBounds();
-                applyCollisions();
-                drawLines();
-            }
+            if (!dragTarget) 
+                return;
+            
+            dragTarget.parent.toLocal(event.global, null, dragTarget.position);
+            locked.x = dragTarget.x;
+            locked.y = dragTarget.y;
+            applyEdgePower();
+            constrainToBounds();
+            applyCollisions();
+            drawLines();
+            spaceEdgesOnNode();
+            
         }
 
         function onDragStart() {
@@ -82,6 +85,7 @@
                 constrainToBounds();
                 applyCollisions();
                 drawLines();
+                spaceEdgesOnNode();
                 shouldLock = false;
             }
         }
@@ -110,6 +114,7 @@
                 constrainToBounds();
                 applyCollisions();
                 drawLines();
+                spaceEdgesOnNode();
                 await sleep(10);
             }
         }
@@ -168,18 +173,19 @@
         }
 
 
-        for(var i = 0; i < 12; i++) {
+        for(var i = 0; i < 4; i++) {
             createNode(randomX(), randomY(), 20, 0x3A3A3A, i)
         }
 
         for(var i = 0; i < testEdges.length; i++) {
-            testEdges[i][2] = 150;
+            testEdges[i][2] = 100;
         }
         
         applyEdgePower();
         constrainToBounds();
         applyCollisions();
         drawLines();
+        spaceEdgesOnNode();
 
         main();
 
@@ -210,17 +216,15 @@
         }
 
         // TODO: add line styles such as a directed line (just an arrow going from one node to another)
-        function drawLine(x1, y1, x2, y2, width, colour, length) {
+        function drawLine(x1, y1, x2, y2, width, colour, value) {
             const line = new PIXI.Graphics();
             line.lineStyle(width, colour, 1);
             line.moveTo(x1, y1);
             line.lineTo(x2, y2);
 
-            var annotation = new PIXI.Text(length, textOptions);
-
-            annotation.anchor.set(0.5); 
-
-            line.addChild(annotation);
+            //var annotation = new PIXI.Text(value, textOptions);
+            //annotation.anchor.set(0.5);
+            //line.addChild(annotation);
 
             LinesContainer.addChild(line);
             return line;
@@ -292,11 +296,6 @@
 
                     difference = true;
 
-                    /*This is equal to 10000000000^0.16
-                    The reason it is in its own variable is to reduce the amount of processing in this function.
-                    To change it just recalculate it.*/
-                    const constant = 39.8107170553
-
                     var diff = edgeLen - dist
 
                     var percent = (diff)/ (dist* constant)
@@ -328,6 +327,75 @@
                 if (node.y < 0) node.y = 0
                 if (node.x > app.screen.width) node.x = app.screen.width
                 if (node.y > app.screen.height) node.y = app.screen.height
+            }
+        }
+
+        function spaceEdgesOnNode() {
+            /*for (var i = 0; i < testEdges.length; i++) {
+                if (nodesEdgeNum[i] == undefined) {
+                    nodesEdgeNum[i] = []
+                }
+                nodesEdgeNum[i][testEdges[i][0]] += testEdges[i][1]
+                console.log(testEdges[i][1])
+            }
+            for (var i = 0; i < testEdges.length; i++) {
+                if (nodesEdgeNum[i] == undefined) {
+                    nodesEdgeNum[i] = []
+                }
+                nodesEdgeNum[i][testEdges[i][1]] += testEdges[i][0]
+                console.log(testEdges[i][0])
+            }*/
+            for (var x = 0; x < 1; x++) {
+                for(var i = 0; i < nodesEdgeNum.length; i++) {
+                    // use the following formula to calculate the angle between each edge and then space them out
+                    //x = r sin(d)
+                    //y = r cos(d)
+                    // where d is the angle between each edge
+                    // and r is the distance between each node
+                    var angle = 360 / nodesEdgeNum[i]
+                    var connectedNodes = []
+                    for (var k = 0; k < testEdges.length; k++) {
+                        if (testEdges[k][0] == i && testEdges[k][1] != i) {
+                            connectedNodes.push(testEdges[k][1])
+                        } else if (testEdges[k][1] == i && testEdges[k][0] != i) {
+                            connectedNodes.push(testEdges[k][0])
+                        }
+                    }
+
+                    console.log(connectedNodes)
+
+                    for (var j = 0; j < connectedNodes.length; j++) {
+                        if (i%2) {
+                            var tempAngle = angle * j;
+                        } else {
+                            var tempAngle = -180 + angle * j;
+                        }
+
+                        // get the distance between the two nodes
+                        var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j]].x
+                        var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j]].y
+                        var dist = Math.sqrt(dx * dx + dy * dy)
+
+                        // get the current angle of the node in degrees
+                        var currentAngle = Math.atan2(dy, dx)
+                        currentAngle = currentAngle * 180 / Math.PI
+
+                        console.log(`angles curr: ${currentAngle}, temp: ${tempAngle}`)
+                        
+                        // get the position of temp angle on the circle
+                        var offsetX = dist * Math.sin(tempAngle) / constant
+                        var offsetY = dist * Math.cos(tempAngle) / constant
+
+                        console.log(`${dist * Math.sin(tempAngle)}, ${dist * Math.cos(tempAngle)}`)
+
+                        //console.log(`${offsetX}, ${offsetY}`)
+
+                        // move the node towards the position
+                        NodesContainer.children[connectedNodes[j]].x += offsetX * 0.2
+                        NodesContainer.children[connectedNodes[j]].y += offsetY * 0.2
+                        
+                    }          
+                }
             }
         }
     </script>
