@@ -11,3 +11,9 @@ Important part below:
 If a node is released:
 1. Calculate the center point for all connected nodes
 2. All nodes will travel to this center point until all nodes are close enough to the center point
+
+Lochyj's ideas:
+
+when a node is clicked it should be 100% locked into the position of the cursor
+
+the edges coming off of the nodes should be evenly spaced e.g: if there are 4 edges to a node then 
