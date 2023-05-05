@@ -28,27 +28,22 @@
 <body>
     <div id="canvas"></div>
     <script>
+        "use strict"
         // TODO: Fix this later
         let dragTarget = null;
 
-        const numNodes = 6;
+        const numNodes = 400;
         
-        var testEdges = [
-            [0, 1, 0],
-            [1, 2, 0],
-            [2, 3, 0],
-            [5, 1, 0],
-            [5, 4, 0],
-        ]
+        // Make random edges
+        let testEdges = new Array(numNodes-1);
 
-        var nodesEdgeNum = [
-            2,
-            3,
-            2,
-            1,
-            2,
-            2,
-        ]
+        for (var i = 0; i < testEdges.length; i++) {
+            testEdges[i] = [i, i+1, 0];
+        };
+
+        //console.log(testEdges)
+
+        var nodesEdgeNum = 3;
 
         /*This is equal to 10000000000^0.16
         The reason it is in its own variable is to reduce the amount of processing in this function.
@@ -65,7 +60,7 @@
             applyEdgePower();
             spaceEdgesOnNode();
             constrainToBounds();
-            applyCollisions();
+            //applyCollisions(); // Commenting this line frees up so much cpu time
             drawLines();
             
         }
@@ -141,6 +136,7 @@
         }
     </script>
     <script>
+        "use strict"
         const app = new PIXI.Application({
             resolution: 2,
             antialias: true
@@ -260,7 +256,7 @@
             const line = new PIXI.Sprite(lineT);
             line.x = x2;
             line.y = y2;
-            line.height = Math.sqrt((dx)**2 + (dy)**2);
+            line.height = Math.sqrt((dx*dx) + (dy*dy));
             line.width = width;
 
             line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
@@ -292,37 +288,26 @@
         }
 
         function applyCollisions() {
-            for (var x = 0; x < 3; x++) {
-                for (var i = 0; i < NodesContainer.children.length; i++) {
-                    for (var j = 0; j < NodesContainer.children.length; j++) {
+            for (let x = 0; x < 3; x++) {
+                for (let i = 0; i < NodesContainer.children.length; i++) {
+                    for (let j = 0; j < NodesContainer.children.length; j++) {
                         if (i != j) {
-                            var a = NodesContainer.children[i]
-                            var b = NodesContainer.children[j]
-                            var dx = Math.abs(b.x - a.x)
-                            var dy = Math.abs(b.y - a.y)
-                            var dist = Math.sqrt(dx * dx + dy * dy)
-                            var minDist = a.width / 2 + b.width / 2
-                            if (dist < minDist) { 
-                                //If a is to the left of b
-                                if (a.x < b.x) {
-                                    a.x -= dx*.01
-                                    b.x += dx*.01
-                                }
-                                // If a is to the right of b
-                                if (a.x > b.x) {
-                                    a.x += dx*.01
-                                    b.x -= dx*.01
-                                }
-                                // If a is above b
-                                if (a.y < b.y) {
-                                    a.y -= dy*.01
-                                    b.y += dy*.01
-                                }
-                                // If a is below b
-                                if (a.y > b.y) {
-                                    a.y += dy*.01
-                                    b.y -= dy*.01
-                                }
+                            const a = NodesContainer.children[i]
+                            const b = NodesContainer.children[j]
+                            const dx = b.x - a.x
+                            const dy = b.y - a.y
+                            const dist = Math.sqrt(dx * dx + dy * dy)
+                            const minDist = (a.width + b.width) * 0.5
+                            if (dist < minDist) {
+                                const angle = Math.atan2(dy, dx)
+                                const tx = a.x + Math.cos(angle) * minDist
+                                const ty = a.y + Math.sin(angle) * minDist
+                                const ax = (tx - b.x) * 0.5
+                                const ay = (ty - b.y) * 0.5
+                                a.x -= ax
+                                a.y -= ay
+                                b.x += ax
+                                b.y += ay
                             }
                         }
                     }
@@ -387,11 +372,11 @@
         }
 
         function spaceEdgesOnNode() {
-            for (var i = 0; i < nodesEdgeNum.length; i++) {
-                if (nodesEdgeNum[i] == 0) {
+            for (var i = 0; i < numNodes; i++) {
+                if (nodesEdgeNum == 0) {
                     var angle = 360;
                 } else {
-                    var angle = 360 / nodesEdgeNum[i];
+                    var angle = 360 / nodesEdgeNum;
                 }
                 var connectedNodes = []
                 for (var k = 0; k < testEdges.length; k++) {
@@ -403,9 +388,9 @@
                 }
 
                 // Initialize the angles array to house all of the possible angles for degrees of the vertex / node.
-                var angles = Array(nodesEdgeNum[i]);
+                var angles = Array(nodesEdgeNum);
 
-                for (var j = 0; j < nodesEdgeNum[i]; j++) {
+                for (var j = 0; j < nodesEdgeNum; j++) {
                     angles[j] = angle * j;
                 }
 
