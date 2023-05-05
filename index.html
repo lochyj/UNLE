@@ -32,18 +32,24 @@
         // TODO: Fix this later
         let dragTarget = null;
 
-        const numNodes = 400;
+        const numNodes = 6;
         
-        // Make random edges
-        let testEdges = new Array(numNodes-1);
+        var testEdges = [
+            [0, 1, 0],
+            [1, 2, 0],
+            [2, 3, 0],
+            [5, 1, 0],
+            [5, 4, 0],
+        ]
 
-        for (var i = 0; i < testEdges.length; i++) {
-            testEdges[i] = [i, i+1, 0];
-        };
-
-        //console.log(testEdges)
-
-        var nodesEdgeNum = 3;
+        var nodesEdgeNum = [
+            2,
+            3,
+            2,
+            1,
+            2,
+            2,
+        ]
 
         /*This is equal to 10000000000^0.16
         The reason it is in its own variable is to reduce the amount of processing in this function.
@@ -372,11 +378,11 @@
         }
 
         function spaceEdgesOnNode() {
-            for (var i = 0; i < numNodes; i++) {
-                if (nodesEdgeNum == 0) {
+            for (var i = 0; i < nodesEdgeNum.length; i++) {
+                if (nodesEdgeNum[i] == 0) {
                     var angle = 360;
                 } else {
-                    var angle = 360 / nodesEdgeNum;
+                    var angle = 360 / nodesEdgeNum[i];
                 }
                 var connectedNodes = []
                 for (var k = 0; k < testEdges.length; k++) {
@@ -388,9 +394,9 @@
                 }
 
                 // Initialize the angles array to house all of the possible angles for degrees of the vertex / node.
-                var angles = Array(nodesEdgeNum);
+                var angles = Array(nodesEdgeNum[i]);
 
-                for (var j = 0; j < nodesEdgeNum; j++) {
+                for (var j = 0; j < nodesEdgeNum[i]; j++) {
                     angles[j] = angle * j;
                 }
 
