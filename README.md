@@ -1,6 +1,6 @@
-# WCNL
- A constraint based layout engine for node graphs
+# UNLE.js
+ An unconstrained node layout engine for those who really care about performance.
 
-WCNL stands for Web Constraint Node Layout. WCNL is a constraint based layout engine for node graphs.
+UNLE stands for Unconstrained Node Layout Engine.
 
-Click [here](https://lochyj.github.io/WCNL/)
+Click [here](https://lochyj.github.io/WCNL/) for a demo.

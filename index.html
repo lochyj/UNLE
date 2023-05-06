@@ -32,54 +32,46 @@
         // TODO: Fix this later
         let dragTarget = null;
 
-        const numNodes = 6;
-        
+        const numNodes = 4;
+
         var testEdges = [
             [0, 1, 0],
             [1, 2, 0],
             [2, 3, 0],
-            [5, 1, 0],
-            [5, 4, 0],
         ]
-
+        
         var nodesEdgeNum = [
-            2,
-            3,
-            2,
             1,
             2,
             2,
+            1,
         ]
 
-        /*This is equal to 10000000000^0.16
+        /*This is equal to 10000000000^0.14
         The reason it is in its own variable is to reduce the amount of processing in this function.
         To change it just recalculate it.*/
-        const constant = 39.8107170553
+        const constant = 25.1188643151
 
         function onDragMove(event) {
-            if (!dragTarget) 
+            if (!dragTarget)
                 return;
             
             dragTarget.parent.toLocal(event.global, null, dragTarget.position);
+            noDiff = false;
             locked.x = dragTarget.x;
             locked.y = dragTarget.y;
-            applyEdgePower();
-            spaceEdgesOnNode();
-            constrainToBounds();
-            //applyCollisions(); // Commenting this line frees up so much cpu time
+            //applyEdgePower(); // These are obsolete and will save much processing power
+            //spaceEdgesOnNode();
+            //constrainToBounds();
+            //applyCollisions(); // This will make it looks cleaner if its uncommented
             drawLines();
-            
         }
 
         function onDragStart() {
-            // store a reference to the data
-            // the reason for this is because of multitouch
-            // we want to track the movement of this particular touch
-            // this.data = event.data;
-            this.alpha = 0.9;
             dragTarget = this;
             app.stage.on('pointermove', onDragMove);
             shouldLock = true;
+            noDiff = false;
             locked.x = dragTarget.x;
             locked.y = dragTarget.y;
         }
@@ -87,18 +79,8 @@
         function onDragEnd() {
             if (dragTarget) {
                 app.stage.off('pointermove', onDragMove);
-                dragTarget.alpha = 1;
-                // Testing:
-                //console.log(dragTarget)
                 dragTarget = null;
-
-                /* Redundant by main function
-                applyEdgePower();
-                spaceEdgesOnNode();
-                constrainToBounds();
-                applyCollisions();
-                drawLines();
-                */
+                noDiff = false;
                 shouldLock = false;
             }
         }
@@ -120,15 +102,21 @@
                     await sleep(16);
                     console.log("waiting!")
                     continue;
-                } else if (shouldLock) {
-                    dragTarget.x = locked.x;
-                    dragTarget.y = locked.y;
                 }
+
                 applyEdgePower();
                 spaceEdgesOnNode();
                 constrainToBounds();
                 applyCollisions();
+
+                // This is between applyCollisions and drawLines to make sure that the lines are drawn correctly and so that the nodes are correctly locked in place.
+                if (shouldLock) {
+                    dragTarget.x = locked.x;
+                    dragTarget.y = locked.y;
+                }
+
                 drawLines();
+
                 await sleep(16);
             }
         }
@@ -159,6 +147,15 @@
 
         var textOptions = {
             font: "bold 64px Roboto", // Set  style, size and font
+            fill: '#FFFFFF', // Set fill color to blue
+            align: 'center', // Center align the text, since it's multiline
+            stroke: '#000000', // Set stroke color to a dark blue gray color
+            strokeThickness: 2, // Set stroke thickness to 20
+            lineJoin: 'round' // Set the lineJoin to round
+        }
+
+        var textOptions2 = {
+            font: "bold 32px Roboto", // Set  style, size and font
             fill: '#FFFFFF', // Set fill color to blue
             align: 'center', // Center align the text, since it's multiline
             stroke: '#000000', // Set stroke color to a dark blue gray color
@@ -210,14 +207,6 @@
         for(var i = 0; i < testEdges.length; i++) {
             testEdges[i][2] = 100;
         }
-        
-        /* Redundant by main function
-        applyEdgePower();
-        constrainToBounds();
-        applyCollisions();
-        drawLines();
-        spaceEdgesOnNode();
-        */
 
         main();
 
@@ -265,16 +254,18 @@
             line.height = Math.sqrt((dx*dx) + (dy*dy));
             line.width = width;
 
-            line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
+            const angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
 
-            app.stage.addChild(line);
+            line.angle = angle;
 
-            //var annotation = new PIXI.Text(value, textOptions);
-            //annotation.anchor.set(0.5);
-            //line.addChild(annotation);
+            const annotation = new PIXI.Text(value, textOptions);
+            annotation.anchor.set(0.5);
 
-            LinesContainer.addChild(line);
-            return line;
+            const lineContainer = new PIXI.Container();
+            lineContainer.addChild(line);
+            lineContainer.addChild(annotation);
+
+            LinesContainer.addChild(lineContainer);
         }
 
         // Implement this fully later
@@ -325,38 +316,33 @@
 
         function applyEdgePower() {
             var difference = false;
-            for (var x = 0; x < 2; x++) {
-                // Apply a force to each node based on the edges
-                for (var i = 0; i < testEdges.length; i++) {
-                    NodesContainer.children[testEdges[i][0]]
-                    // get the difference between the target node and the current node
-                    var dx = NodesContainer.children[testEdges[i][1]].x - NodesContainer.children[testEdges[i][0]].x
-                    var dy = NodesContainer.children[testEdges[i][1]].y - NodesContainer.children[testEdges[i][0]].y
+            for (var i = 0; i < testEdges.length; i++) {
+                NodesContainer.children[testEdges[i][0]]
+                // get the difference between the target node and the current node
+                var dx = NodesContainer.children[testEdges[i][1]].x - NodesContainer.children[testEdges[i][0]].x
+                var dy = NodesContainer.children[testEdges[i][1]].y - NodesContainer.children[testEdges[i][0]].y
 
-                    var edgeLen = testEdges[i][2]
+                var edgeLen = testEdges[i][2]
 
-                    var dist = Math.sqrt(dx * dx + dy * dy)
+                var dist = Math.sqrt(dx * dx + dy * dy)
 
-                    // if the distance is within 10% + or - of the edge length, don't apply a force
-                    if (dist > edgeLen * 0.95 && dist < edgeLen * 1.05) 
-                        continue;
+                // if the distance is within 5% + or - of the edge length, don't apply a force
+                if (dist > edgeLen * 0.95 && dist < edgeLen * 1.05) 
+                    continue;
 
-                    difference = true;
+                difference = true;
 
-                    var diff = edgeLen - dist
+                var diff = edgeLen - dist
 
-                    var percent = diff / (dist * constant)
+                var percent = diff / (dist * constant)
 
-                    var offsetX = dx * percent
-                    var offsetY = dy * percent
+                var offsetX = dx * percent
+                var offsetY = dy * percent
 
-                    NodesContainer.children[testEdges[i][0]].x -= offsetX
-                    NodesContainer.children[testEdges[i][0]].y -= offsetY
-                    NodesContainer.children[testEdges[i][1]].x += offsetX
-                    NodesContainer.children[testEdges[i][1]].y += offsetY
-
-
-                }
+                NodesContainer.children[testEdges[i][0]].x -= offsetX
+                NodesContainer.children[testEdges[i][0]].y -= offsetY
+                NodesContainer.children[testEdges[i][1]].x += offsetX
+                NodesContainer.children[testEdges[i][1]].y += offsetY
             }
 
             if (!difference) {
@@ -367,64 +353,16 @@
         }
 
         function constrainToBounds() {
-            // ensure all nodes are within the bounds of the canvas
             for (var i = 0; i < NodesContainer.children.length; i++) {
-                var node = NodesContainer.children[i]
-                if (node.x < 0) node.x = 0
-                if (node.y < 0) node.y = 0
-                if (node.x > app.screen.width) node.x = app.screen.width
-                if (node.y > app.screen.height) node.y = app.screen.height
+                var node = NodesContainer.children[i];
+                node.x = Math.min(Math.max(node.x, 0), app.screen.width);
+                node.y = Math.min(Math.max(node.y, 0), app.screen.height);
             }
         }
 
+        // create a function that will evenly space all of the connected nodes around the node
         function spaceEdgesOnNode() {
-            for (var i = 0; i < nodesEdgeNum.length; i++) {
-                if (nodesEdgeNum[i] == 0) {
-                    var angle = 360;
-                } else {
-                    var angle = 360 / nodesEdgeNum[i];
-                }
-                var connectedNodes = []
-                for (var k = 0; k < testEdges.length; k++) {
-                    if (testEdges[k][0] == i && testEdges[k][1] != i) {
-                        connectedNodes.push([testEdges[k][1], testEdges[k][2]])
-                    } else if (testEdges[k][1] == i && testEdges[k][0] != i) {
-                        connectedNodes.push([testEdges[k][0], testEdges[k][2]])
-                    }
-                }
 
-                // Initialize the angles array to house all of the possible angles for degrees of the vertex / node.
-                var angles = Array(nodesEdgeNum[i]);
-
-                for (var j = 0; j < nodesEdgeNum[i]; j++) {
-                    angles[j] = angle * j;
-                }
-
-                for (var j = 0; j < connectedNodes.length; j++) {
-
-                    var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j][0]].x;
-                    var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j][0]].y;
-                    var dist = connectedNodes[j][1];
-
-                    //var currentAngle = toDegrees(Math.atan2(dy, dx));
-
-                    //var closestAngle = Math.abs(Math.round(currentAngle / angle) * angle)
-
-                    // find the index of the closest angle in angles to the current angle
-                    
-                    var offsetX = (dist) * Math.sin(toRadians(angles[j])) / constant;
-                    var offsetY = (dist) * Math.cos(toRadians(angles[j])) / constant;
-
-                    // move the node towards the position
-                    NodesContainer.children[connectedNodes[j][0]].x += offsetX;
-                    NodesContainer.children[connectedNodes[j][0]].y += offsetY;
-
-                    // now move the current node in the opposite angle to the position
-                    NodesContainer.children[i].x -= offsetX;
-                    NodesContainer.children[i].y -= offsetY;
-                    
-                }
-            }
         }
     </script>
 </body>
