@@ -119,7 +119,7 @@ function onDragEnd() {
         shouldLock = false;
         if (!checkingDiff) {
             checkingDiff = true
-            setTimeout(checkInitDiff,4500)
+            setTimeout(checkInitDiff,5000 - (Math.PI/5))
             setTimeout(checkDiff,5000)
         };
     }
@@ -141,7 +141,7 @@ async function main() {
     
     while (true) {
         if (noDiff) {
-            await sleep(32);
+            await sleep(64);
             console.log("waiting!")
             continue;
         }
@@ -176,7 +176,7 @@ function checkInitDiff() {
 function checkDiff() {
     const diff = (finalCoords.flat().reduce((partialSum, a) => partialSum + a, 0)) - (initCoords.flat().reduce((partialSum, a) => partialSum + a, 0));
 
-    if (diff < 10) {
+    if (diff < 5) {
         noDiff = true
     }
 
@@ -369,5 +369,56 @@ function constrainToBounds() {
 }
 
 function spaceEdgesOnNode() {
-    
+    // NodesContainer
+    // testEdges 
+    // nodesEdgeNum
+
+    for (var i = 0; i < nodesEdgeNum.length; i++) {
+        var node = NodesContainer.children[i];
+        var edges = nodesEdgeNum[i];
+
+        if (edges <= 1)
+            continue;
+
+        var angleDiv = 360 / (edges);
+
+        var connectedNodes = testEdges.filter(function (edge) {
+            return edge[0] == i || edge[1] == i;
+        });
+
+        if (connectedNodes.length != edges) {
+            console.log("PANIC, connected nodes doesn't equal the number of edges of vertex " + i)
+            continue;
+        }
+
+        var connectedAngles = [];
+        for (var x = 0; x < edges; x++) {
+            var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[x][0]].x;
+            var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[x][0]].y;
+            connectedAngles[x] = (Math.atan2(dx, dy) * (180 / Math.PI) + 360) % 360;
+        }
+
+        var takenAngles = [];
+
+        console.log(takenAngles)
+
+        for (var j = 0; j < edges; j++) {
+            var angle = connectedAngles[j];
+
+            var closestAngle = Math.round(angle / angleDiv) * angleDiv;
+
+            while (takenAngles.includes(closestAngle) && closestAngle + angleDiv <= 360) {
+                closestAngle += angleDiv;
+            }
+
+            takenAngles.push(closestAngle);
+
+            var dx = Math.sin(closestAngle * (Math.PI / 180)) * 100;
+            var dy = Math.cos(closestAngle * (Math.PI / 180)) * 100;
+
+            NodesContainer.children[connectedNodes[j][0]].x = NodesContainer.children[i].x - dx;
+            NodesContainer.children[connectedNodes[j][0]].y = NodesContainer.children[i].y - dy;
+
+        }
+    }
 }
