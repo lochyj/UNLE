@@ -9,8 +9,8 @@ const app = new PIXI.Application({ offscreen,
     antialias: true
 });
 
-const collisionWorker = new Worker("./src/nodeCollision.js");
-const drawLinesWorker = new Worker("./src/drawLines.js");
+//const collisionWorker = new Worker("./src/nodeCollision.js");
+//const drawLinesWorker = new Worker("./src/drawLines.js");
 
 function startup(){
     document.getElementById("canvas").appendChild(app.view);
