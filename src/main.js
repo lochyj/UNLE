@@ -52,54 +52,61 @@ app.stage.addChild(NodesContainer);
 // TODO: Fix this later
 let dragTarget = null;
 
-const numNodes = 6;
+const numNodes = 12;
 
-const testEdges = [
-    [0, 1, 0],
-    [1, 2, 0],
-    [2, 3, 0],
-    [5, 1, 0],
-    [5, 4, 0],
+var testEdges = [
+    [1, 0, 0],
+    [2, 0, 0],
+    [3, 0, 0],
+    [4, 0, 0],
+    [5, 0, 0],
+    [6, 0, 0],
+    [7, 0, 0],
+    [8, 0, 0],
+    [9, 0, 0],
+    [10, 0, 0],
+    [11, 0, 0],
 ]
 
-const nodesEdgeNum = [
-    2,
-    3,
-    2,
+var nodesEdgeNum = [
+    11,
     1,
-    2,
-    2,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
 ]
 
-/*This is equal to 10000000000^0.16
+/*This is equal to 10000000000^0.14
 The reason it is in its own variable is to reduce the amount of processing in this function.
 To change it just recalculate it.*/
-const constant = 39.8107170553
+const constant = 25.1188643151
 
 function onDragMove(event) {
-    if (!dragTarget) 
+    if (!dragTarget)
         return;
     
     dragTarget.parent.toLocal(event.global, null, dragTarget.position);
+    noDiff = false;
     locked.x = dragTarget.x;
     locked.y = dragTarget.y;
-    applyEdgePower();
-    spaceEdgesOnNode();
-    constrainToBounds();
-    // Commenting these lines out below will give more performance
     applyCollisions();
     drawLines();
     
 }
 
 function onDragStart() {
-    
     noDiff = false;
-
-    //this.alpha = 0.9;
     dragTarget = this;
     app.stage.on('pointermove', onDragMove);
     shouldLock = true;
+    noDiff = false;
     locked.x = dragTarget.x;
     locked.y = dragTarget.y;
 }
@@ -107,14 +114,10 @@ function onDragStart() {
 function onDragEnd() {
     if (dragTarget) {
         app.stage.off('pointermove', onDragMove);
-        //dragTarget.alpha = 1;
-        // Testing:
-        //console.log(dragTarget)
         dragTarget = null;
 
         shouldLock = false;
         if (!checkingDiff) {
-            //console.log("Check diff")
             checkingDiff = true
             setTimeout(checkInitDiff,4500)
             setTimeout(checkDiff,5000)
@@ -135,24 +138,28 @@ function sleep(ms) {
 }
 
 async function main() {
+    
     while (true) {
-        if (noDiff){
+        if (noDiff) {
             await sleep(32);
-            //console.log("waiting!")
+            console.log("waiting!")
             continue;
-        } else if (shouldLock) {
-            dragTarget.x = locked.x;
-            dragTarget.y = locked.y;
         }
-
+    
         applyEdgePower();
         spaceEdgesOnNode();
         constrainToBounds();
         applyCollisions();
-        drawLines();
 
+        if (shouldLock) {
+            dragTarget.x = locked.x;
+            dragTarget.y = locked.y;
+        }
+
+        drawLines();
         await sleep(16);
     }
+    
 }
 
 // Determine if anything has changed. Run 5 seconds after 
@@ -160,7 +167,7 @@ let initCoords = [];
 let finalCoords = [];
 
 function checkInitDiff() {
-    for(i=0; i < NodesContainer.children.length; i++){
+    for(i = 0; i < NodesContainer.children.length; i++){
         const node = NodesContainer.children[i];
         initCoords.push([node.x,node.y])
     };
@@ -175,7 +182,7 @@ function checkDiff() {
 
     initCoords, finalCoords = [];
 
-    for(let i=0; i < NodesContainer.children.length; i++){
+    for (var i = 0; i < NodesContainer.children.length; i++){
         const node = NodesContainer.children[i];
         finalCoords.push([node.x,node.y])
     }
@@ -192,225 +199,175 @@ function toRadians(angle) {
 }
 
 function applyCollisions() {
-    let tempContainer = [];
-    for(let i=0; i < NodesContainer.children.length; i++){
-        const node = NodesContainer.children[i];
-        tempContainer.push([node.x,node.y,node.width])
+    for (let x = 0; x < 3; x++) {
+        for (let i = 0; i < NodesContainer.children.length; i++) {
+            for (let j = 0; j < NodesContainer.children.length; j++) {
+                if (i != j) {
+                    const a = NodesContainer.children[i]
+                    const b = NodesContainer.children[j]
+                    const dx = b.x - a.x
+                    const dy = b.y - a.y
+                    const dist = Math.sqrt(dx * dx + dy * dy)
+                    const minDist = (a.width + b.width) * 0.5
+                    if (dist < minDist) {
+                        const angle = Math.atan2(dy, dx)
+                        const tx = a.x + Math.cos(angle) * minDist
+                        const ty = a.y + Math.sin(angle) * minDist
+                        const ax = (tx - b.x) * 0.5
+                        const ay = (ty - b.y) * 0.5
+                        a.x -= ax
+                        a.y -= ay
+                        b.x += ax
+                        b.y += ay
+                    }
+                }
+            }
+        }
     }
-    //console.log(tempContainer)
-    collisionWorker.postMessage(tempContainer);
-    //console.log("Sent");
 }
 
-collisionWorker.onmessage = (e) => {
-    //console.log(e.data);
-    //console.log("Message received from worker");
-    
-    // Now that the data is here, render it
-    const data = e.data;
+function drawLine(x1, y1, x2, y2, width, value) {
+    const dx = x2-x1;
+    const dy = y2-y1;
+    const line = new PIXI.Sprite(lineT);
+    line.x = x2;
+    line.y = y2;
+    line.height = Math.sqrt((dx*dx) + (dy*dy));
+    line.width = width;
 
-    for (let i = 0; i < NodesContainer.children.length; i++) {
-        const node = NodesContainer.children[i];
-        node.x += data[i][0]
-        node.y += data[i][1]
-    }
-};
+    line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
+    const angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
 
+    line.angle = angle;
 
+    LinesContainer.addChild(line);
+}
+
+// Implement this fully later
 function drawLines() {
-    let tempContainer = [];
-    for (let i = 0; i < testEdges.length; i++) {
-        tempContainer.push([
+    LinesContainer.removeChildren();
+    for (var i = 0; i < testEdges.length; i++) {
+        drawLine(
             app.stage.children[1].children[testEdges[i][0]].x,
             app.stage.children[1].children[testEdges[i][0]].y,
             app.stage.children[1].children[testEdges[i][1]].x,
             app.stage.children[1].children[testEdges[i][1]].y,
-            3
-        ])
-    };
-    //console.log(tempContainer)
-    drawLinesWorker.postMessage(tempContainer);
-};
-
-drawLinesWorker.onmessage = (e) => {
-    // Now that the data is here, render it
-    const data = e.data;
-
-    LinesContainer.removeChildren();
-
-    for (let i = 0; i < data.length; i++) {
-
-        const line = new PIXI.Sprite(lineT);
-        line.x = data[i][0];
-        line.y = data[i][1];
-        line.height = data[i][2];
-        line.width = data[i][3];
-        line.angle = data[i][4];
-
-        LinesContainer.addChild(line);
+            3,
+            testEdges[i][2]
+        )
     }
-};
-
-
+}
 
 // get a random value between stage.width and 0
-        function randomX() {
-            return Math.floor(Math.random() * app.screen.width);
+function randomX() {
+    return Math.floor(Math.random() * app.screen.width);
+}
+
+function randomY() {
+    return Math.floor(Math.random() * app.screen.height);
+}
+
+function randomColour() {
+    return Math.floor(Math.random() * 0xFFFFFF);
+}
+
+function randomRadius() {
+    return Math.floor(Math.random() * 25) + 15;
+}
+
+function randomEdgePower() {
+    return Math.floor(Math.random() * 150) + 70;
+}
+
+
+for(var i = 0; i < numNodes; i++) {
+    createNode(randomX(), randomY(), 20, 0x3A3A3A, i)
+}
+
+for(var i = 0; i < testEdges.length; i++) {
+    testEdges[i][2] = 100;
+}
+
+main();
+
+function createNode(x, y, rad, colour, text) {
+
+    // Replaced graphics with sprite for faster rendering
+    const nodeG = new PIXI.Graphics();
+    //nodeG.lineStyle(2, 0xa0a0a0 | colour, 1);
+    nodeG.beginFill(colour, 1);
+    nodeG.drawCircle(0, 0, rad);
+    nodeG.endFill();
+
+    // Moved text into texture
+    const annotation = new PIXI.Text(text, textOptions);
+    annotation.anchor.set(0.5);
+
+
+    const nodeContainer = new PIXI.Container();
+    nodeContainer.addChild(nodeG);
+    nodeContainer.addChild(annotation);
+
+    const nodeT = app.renderer.generateTexture(nodeContainer);
+    const node = new PIXI.Sprite(nodeT);
+    node.anchor.set(0.5);
+
+    node.eventMode = 'dynamic'; // Changed interactive to eventMode
+    node.on('pointerdown', onDragStart, node);
+    node.x = x;
+    node.y = y;
+    NodesContainer.addChild(node);
+    return node;
+}
+
+// testEdges
+
+function applyEdgePower() {
+    var difference = false;
+    for (var x = 0; x < 2; x++) {
+        // Apply a force to each node based on the edges
+        for (var i = 0; i < testEdges.length; i++) {
+            NodesContainer.children[testEdges[i][0]]
+            // get the difference between the target node and the current node
+            var dx = NodesContainer.children[testEdges[i][1]].x - NodesContainer.children[testEdges[i][0]].x
+            var dy = NodesContainer.children[testEdges[i][1]].y - NodesContainer.children[testEdges[i][0]].y
+
+            var edgeLen = testEdges[i][2]
+
+            var dist = Math.sqrt(dx * dx + dy * dy)
+
+            // if the distance is within 10% + or - of the edge length, don't apply a force
+            if (dist > edgeLen * 0.95 && dist < edgeLen * 1.05) 
+                continue;
+
+            difference = true;
+
+            var diff = edgeLen - dist
+
+            var percent = diff / (dist * constant)
+
+            var offsetX = dx * percent
+            var offsetY = dy * percent
+
+            NodesContainer.children[testEdges[i][0]].x -= offsetX
+            NodesContainer.children[testEdges[i][0]].y -= offsetY
+            NodesContainer.children[testEdges[i][1]].x += offsetX
+            NodesContainer.children[testEdges[i][1]].y += offsetY
+
+
         }
+    }
+}
 
-        function randomY() {
-            return Math.floor(Math.random() * app.screen.height);
-        }
+function constrainToBounds() {
+    // ensure all nodes are within the bounds of the canvas
+    for (var i = 0; i < NodesContainer.children.length; i++) {
+        var node = NodesContainer.children[i];
+        node.x = Math.min(Math.max(node.x, 0), app.screen.width);
+        node.y = Math.min(Math.max(node.y, 0), app.screen.height);
+    }
+}
 
-        function randomColour() {
-            return Math.floor(Math.random() * 0xFFFFFF);
-        }
-
-        function randomRadius() {
-            return Math.floor(Math.random() * 25) + 15;
-        }
-
-        function randomEdgePower() {
-            return Math.floor(Math.random() * 150) + 70;
-        }
-
-
-        for(var i = 0; i < numNodes; i++) {
-            createNode(randomX(), randomY(), 20, 0x3A3A3A, i)
-        }
-
-        for(var i = 0; i < testEdges.length; i++) {
-            testEdges[i][2] = 100;
-        }
-
-        main();
-
-        function createNode(x, y, rad, colour, text) {
-
-            // Replaced graphics with sprite for faster rendering
-            const nodeG = new PIXI.Graphics();
-            //nodeG.lineStyle(2, 0xa0a0a0 | colour, 1);
-            nodeG.beginFill(colour, 1);
-            nodeG.drawCircle(0, 0, rad);
-            nodeG.endFill();
-
-            // Moved text into texture
-            const annotation = new PIXI.Text(text, textOptions);
-            annotation.anchor.set(0.5);
-
-
-            const nodeContainer = new PIXI.Container();
-            nodeContainer.addChild(nodeG);
-            nodeContainer.addChild(annotation);
-
-            const nodeT = app.renderer.generateTexture(nodeContainer);
-            const node = new PIXI.Sprite(nodeT);
-            node.anchor.set(0.5);
-
-            node.eventMode = 'dynamic'; // Changed interactive to eventMode
-            node.on('pointerdown', onDragStart, node);
-            node.x = x;
-            node.y = y;
-            NodesContainer.addChild(node);
-            return node;
-        }
-
-        // testEdges
-
-        function applyEdgePower() {
-            var difference = false;
-            for (var x = 0; x < 2; x++) {
-                // Apply a force to each node based on the edges
-                for (var i = 0; i < testEdges.length; i++) {
-                    NodesContainer.children[testEdges[i][0]]
-                    // get the difference between the target node and the current node
-                    var dx = NodesContainer.children[testEdges[i][1]].x - NodesContainer.children[testEdges[i][0]].x
-                    var dy = NodesContainer.children[testEdges[i][1]].y - NodesContainer.children[testEdges[i][0]].y
-
-                    var edgeLen = testEdges[i][2]
-
-                    var dist = Math.sqrt(dx * dx + dy * dy)
-
-                    // if the distance is within 10% + or - of the edge length, don't apply a force
-                    if (dist > edgeLen * 0.95 && dist < edgeLen * 1.05) 
-                        continue;
-
-                    difference = true;
-
-                    var diff = edgeLen - dist
-
-                    var percent = diff / (dist * constant)
-
-                    var offsetX = dx * percent
-                    var offsetY = dy * percent
-
-                    NodesContainer.children[testEdges[i][0]].x -= offsetX
-                    NodesContainer.children[testEdges[i][0]].y -= offsetY
-                    NodesContainer.children[testEdges[i][1]].x += offsetX
-                    NodesContainer.children[testEdges[i][1]].y += offsetY
-
-
-                }
-            }
-        }
-
-        function constrainToBounds() {
-            // ensure all nodes are within the bounds of the canvas
-            for (var i = 0; i < NodesContainer.children.length; i++) {
-                var node = NodesContainer.children[i]
-                if (node.x < 0) node.x = 0
-                if (node.y < 0) node.y = 0
-                if (node.x > app.screen.width) node.x = app.screen.width
-                if (node.y > app.screen.height) node.y = app.screen.height
-            }
-        }
-
-        function spaceEdgesOnNode() {
-            for (var i = 0; i < nodesEdgeNum.length; i++) {
-                if (nodesEdgeNum[i] == 0) {
-                    var angle = 360;
-                } else {
-                    var angle = 360 / nodesEdgeNum[i];
-                }
-                var connectedNodes = []
-                for (var k = 0; k < testEdges.length; k++) {
-                    if (testEdges[k][0] == i && testEdges[k][1] != i) {
-                        connectedNodes.push([testEdges[k][1], testEdges[k][2]])
-                    } else if (testEdges[k][1] == i && testEdges[k][0] != i) {
-                        connectedNodes.push([testEdges[k][0], testEdges[k][2]])
-                    }
-                }
-
-                // Initialize the angles array to house all of the possible angles for degrees of the vertex / node.
-                var angles = Array(nodesEdgeNum[i]);
-
-                for (var j = 0; j < nodesEdgeNum[i]; j++) {
-                    angles[j] = angle * j;
-                }
-
-                for (var j = 0; j < connectedNodes.length; j++) {
-
-                    var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[j][0]].x;
-                    var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[j][0]].y;
-                    var dist = connectedNodes[j][1];
-
-                    //var currentAngle = toDegrees(Math.atan2(dy, dx));
-
-                    //var closestAngle = Math.abs(Math.round(currentAngle / angle) * angle)
-
-                    // find the index of the closest angle in angles to the current angle
-                    
-                    var offsetX = (dist) * Math.sin(toRadians(angles[j])) / constant;
-                    var offsetY = (dist) * Math.cos(toRadians(angles[j])) / constant;
-
-                    // move the node towards the position
-                    NodesContainer.children[connectedNodes[j][0]].x += offsetX;
-                    NodesContainer.children[connectedNodes[j][0]].y += offsetY;
-
-                    // now move the current node in the opposite angle to the position
-                    NodesContainer.children[i].x -= offsetX;
-                    NodesContainer.children[i].y -= offsetY;
-                    
-                }
-            }
-        }
+function spaceEdgesOnNode() {
+    
+}
