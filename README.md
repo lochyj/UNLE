@@ -3,4 +3,4 @@
 
 UNLE stands for Unconstrained Node Layout Engine.
 
-Click [here](https://lochyj.github.io/WCNL/) for a demo.
+Click [here](https://lochyj.github.io/UNLE/) for a demo.
