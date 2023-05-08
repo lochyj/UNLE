@@ -19,26 +19,22 @@ function startup(){
 //This is neccessary to reuse the same texture for a simple line
 const lineG = new PIXI.Graphics();
 lineG.beginFill(0xFFFFFF, 1);
-lineG.drawRect(0,0,1,1);
+lineG.drawRect(0, 0, 1, 1);
 lineG.endFill();
 const lineT = app.renderer.generateTexture(lineG);
 
 // TODO: rename all "node" to "vertex"
 
 const textOptions = {
-    font: "bold 64px Roboto", // Set  style, size and font
-    fill: '#FFFFFF', // Set fill color to blue
-    align: 'center', // Center align the text, since it's multiline
-    stroke: '#000000', // Set stroke color to a dark blue gray color
-    strokeThickness: 2, // Set stroke thickness to 20
-    lineJoin: 'round' // Set the lineJoin to round
+    font: "bold 64px Roboto",
+    fill: '#FFFFFF',
+    align: 'center',
+    stroke: '#000000',
+    strokeThickness: 2,
+    lineJoin: 'round'
 }
 
-
-
-// This is supposed to be deprecated... Find a better way to do this.
-app.stage.eventMode = 'dynamic'; // Changed interactive to eventMode
-//
+app.stage.eventMode = 'dynamic';
 app.stage.hitArea = app.screen;
 app.stage.on('pointerup', onDragEnd);
 app.stage.on('pointerupoutside', onDragEnd);
@@ -120,11 +116,11 @@ function onDragEnd() {
         previousStress = 999;
 
         shouldLock = false;
-        if (!checkingDiff) {
-            checkingDiff = true
-            setTimeout(checkInitDiff,5000 - (Math.PI/5))
-            setTimeout(checkDiff,5000)
-        };
+        // if (!checkingDiff) {
+        //     checkingDiff = true
+        //     setTimeout(checkInitDiff,5000 - (Math.PI/5))
+        //     setTimeout(checkDiff,5000)
+        // };
     }
 }
 
@@ -370,17 +366,18 @@ function applyNodeStress() {
     for (var i = 0; i < nodesEdgeNum.length; i++) {
         var currentNode = NodesContainer.children[i];
         var edges = nodesEdgeNum[i];
+        var Angles = [];
 
         var connectedNodes = testEdges.filter(function (edge) {
             return edge[0] == i || edge[1] == i;
         });
 
-        var connectedAngles = [];
         for (var x = 0; x < edges; x++) {
             var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[x][0]].x;
             var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[x][0]].y;
-            connectedAngles[x] = (Math.atan2(dx, dy) * (180 / Math.PI) + 360) % 360;
+            Angles[x] = (Math.atan2(dx, dy) * (180 / Math.PI) + 360) % 360;
         }
+
     }
     return stress;
 }
