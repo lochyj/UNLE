@@ -51,6 +51,7 @@ app.stage.addChild(NodesContainer);
 
 // TODO: Fix this later
 let dragTarget = null;
+const acceptableStress = 0.05;
 
 const numNodes = 12;
 
@@ -98,7 +99,7 @@ function onDragMove(event) {
     locked.y = dragTarget.y;
     applyCollisions();
     drawLines();
-    
+    previousStress = 999;
 }
 
 function onDragStart() {
@@ -109,12 +110,14 @@ function onDragStart() {
     noDiff = false;
     locked.x = dragTarget.x;
     locked.y = dragTarget.y;
+    previousStress = 999;
 }
 
 function onDragEnd() {
     if (dragTarget) {
         app.stage.off('pointermove', onDragMove);
         dragTarget = null;
+        previousStress = 999;
 
         shouldLock = false;
         if (!checkingDiff) {
@@ -146,8 +149,7 @@ async function main() {
             continue;
         }
     
-        applyEdgePower();
-        spaceEdgesOnNode();
+        applyStress();
         constrainToBounds();
         applyCollisions();
 
@@ -320,45 +322,6 @@ function createNode(x, y, rad, colour, text) {
     return node;
 }
 
-// testEdges
-
-function applyEdgePower() {
-    var difference = false;
-    for (var x = 0; x < 2; x++) {
-        // Apply a force to each node based on the edges
-        for (var i = 0; i < testEdges.length; i++) {
-            NodesContainer.children[testEdges[i][0]]
-            // get the difference between the target node and the current node
-            var dx = NodesContainer.children[testEdges[i][1]].x - NodesContainer.children[testEdges[i][0]].x
-            var dy = NodesContainer.children[testEdges[i][1]].y - NodesContainer.children[testEdges[i][0]].y
-
-            var edgeLen = testEdges[i][2]
-
-            var dist = Math.sqrt(dx * dx + dy * dy)
-
-            // if the distance is within 10% + or - of the edge length, don't apply a force
-            if (dist > edgeLen * 0.95 && dist < edgeLen * 1.05) 
-                continue;
-
-            difference = true;
-
-            var diff = edgeLen - dist
-
-            var percent = diff / (dist * constant)
-
-            var offsetX = dx * percent
-            var offsetY = dy * percent
-
-            NodesContainer.children[testEdges[i][0]].x -= offsetX
-            NodesContainer.children[testEdges[i][0]].y -= offsetY
-            NodesContainer.children[testEdges[i][1]].x += offsetX
-            NodesContainer.children[testEdges[i][1]].y += offsetY
-
-
-        }
-    }
-}
-
 function constrainToBounds() {
     // ensure all nodes are within the bounds of the canvas
     for (var i = 0; i < NodesContainer.children.length; i++) {
@@ -366,6 +329,60 @@ function constrainToBounds() {
         node.x = Math.min(Math.max(node.x, 0), app.screen.width);
         node.y = Math.min(Math.max(node.y, 0), app.screen.height);
     }
+}
+
+var previousStress = 999;
+function applyStress() {
+    if (previousStress < 0.1) {
+        return;
+    }
+    var stress = applyEdgeStress();
+    //stress += applyNodeStress();
+    console.log(stress);
+    previousStress = stress;
+}
+
+function applyEdgeStress() {
+    var stress = 0;
+    for (var i = 0; i < testEdges.length; i++) {
+        var expectedLength = testEdges[i][2];
+        var dx = NodesContainer.children[testEdges[i][1]].x - NodesContainer.children[testEdges[i][0]].x;
+        var dy = NodesContainer.children[testEdges[i][1]].y - NodesContainer.children[testEdges[i][0]].y;
+        var length = Math.sqrt(dx * dx + dy * dy);
+        var difference = length - expectedLength;
+        var percent = difference / length / 2;
+
+        stress += Math.abs(difference);
+
+        var offsetX = dx * percent;
+        var offsetY = dy * percent;
+
+        NodesContainer.children[testEdges[i][0]].x += offsetX;
+        NodesContainer.children[testEdges[i][0]].y += offsetY;
+        NodesContainer.children[testEdges[i][1]].x -= offsetX;
+        NodesContainer.children[testEdges[i][1]].y -= offsetY;
+    }
+    return stress;
+}
+
+function applyNodeStress() {
+    var stress = 0;
+    for (var i = 0; i < nodesEdgeNum.length; i++) {
+        var currentNode = NodesContainer.children[i];
+        var edges = nodesEdgeNum[i];
+
+        var connectedNodes = testEdges.filter(function (edge) {
+            return edge[0] == i || edge[1] == i;
+        });
+
+        var connectedAngles = [];
+        for (var x = 0; x < edges; x++) {
+            var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[x][0]].x;
+            var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[x][0]].y;
+            connectedAngles[x] = (Math.atan2(dx, dy) * (180 / Math.PI) + 360) % 360;
+        }
+    }
+    return stress;
 }
 
 function spaceEdgesOnNode() {
