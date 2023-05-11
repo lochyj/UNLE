@@ -333,8 +333,7 @@ function applyStress() {
         return;
     }
     var stress = applyEdgeStress();
-    //stress += applyNodeStress();
-    console.log(stress);
+    stress += applyNodeStress();
     previousStress = stress;
 }
 
@@ -364,6 +363,9 @@ function applyEdgeStress() {
 function applyNodeStress() {
     var stress = 0;
     for (var i = 0; i < nodesEdgeNum.length; i++) {
+        if (nodesEdgeNum[i] <= 1)
+            continue;
+            
         var currentNode = NodesContainer.children[i];
         var edges = nodesEdgeNum[i];
         var Angles = [];
@@ -378,61 +380,63 @@ function applyNodeStress() {
             Angles[x] = (Math.atan2(dx, dy) * (180 / Math.PI) + 360) % 360;
         }
 
-    }
-    return stress;
-}
-
-function spaceEdgesOnNode() {
-    // NodesContainer
-    // testEdges 
-    // nodesEdgeNum
-
-    for (var i = 0; i < nodesEdgeNum.length; i++) {
-        var node = NodesContainer.children[i];
-        var edges = nodesEdgeNum[i];
-
-        if (edges <= 1)
-            continue;
-
-        var angleDiv = 360 / (edges);
-
-        var connectedNodes = testEdges.filter(function (edge) {
-            return edge[0] == i || edge[1] == i;
+        // order the nodes in connectedNodes by angle
+        connectedNodes.sort(function (a, b) {
+            var aAngle = Angles[a[0] == i ? a[1] : a[0]];
+            var bAngle = Angles[b[0] == i ? b[1] : b[0]];
+            return aAngle - bAngle;
         });
 
-        if (connectedNodes.length != edges) {
-            console.log("PANIC, connected nodes doesn't equal the number of edges of vertex " + i)
-            continue;
-        }
+        // get the other nodes that are connected to this node
+        for (var j = 1; j < connectedNodes.length - 1; j++) {
+            const differenceBetweenConnectedNodes = 360 / (connectedNodes.length);
+        
+            // get the connected node
+            var connectedNode = connectedNodes[j][0] == i ? connectedNodes[j][1] : connectedNodes[j][0];
+            // get the next connected node if it exists
+            var nextConnectedNode = connectedNodes[j+1][0] == i ? connectedNodes[j+1][1] : connectedNodes[j+1][0];
+        
+            // get the angle between connectedNode and nextConnectedNode
+            var c_dx = currentNode.x - NodesContainer.children[connectedNode].x;
+            var c_dy = currentNode.y - NodesContainer.children[connectedNode].y;
 
-        var connectedAngles = [];
-        for (var x = 0; x < edges; x++) {
-            var dx = NodesContainer.children[i].x - NodesContainer.children[connectedNodes[x][0]].x;
-            var dy = NodesContainer.children[i].y - NodesContainer.children[connectedNodes[x][0]].y;
-            connectedAngles[x] = (Math.atan2(dx, dy) * (180 / Math.PI) + 360) % 360;
-        }
+            var c_angle = (Math.atan2(c_dx, c_dy) * (180 / Math.PI) + 360) % 360;
 
-        var takenAngles = [];
+            var nc_dx = currentNode.x - NodesContainer.children[nextConnectedNode].x;
+            var nc_dy = currentNode.y - NodesContainer.children[nextConnectedNode].y;
 
-        console.log(takenAngles)
+            var nc_angle = (Math.atan2(nc_dx, nc_dy) * (180 / Math.PI) + 360) % 360;
 
-        for (var j = 0; j < edges; j++) {
-            var angle = connectedAngles[j];
+            var angle = (nc_angle - c_angle);
 
-            var closestAngle = Math.round(angle / angleDiv) * angleDiv;
-
-            while (takenAngles.includes(closestAngle) && closestAngle + angleDiv <= 360) {
-                closestAngle += angleDiv;
+            console.log(angle)
+        
+            // determine if connectedNode or nextConnectedNode should be moved clockwise or anti-clockwise
+            var clockwise = angle > differenceBetweenConnectedNodes ? true : false;
+        
+            // move the connectedNode
+            var offsetX, nextOffsetX = 0;
+            var offsetY, nextOffsetY = 0;
+        
+            if (clockwise) {
+                offsetX = Math.cos(angle);
+                offsetY = Math.sin(angle);
+                nextOffsetX = -Math.cos(angle);
+                nextOffsetY = -Math.sin(angle);
+            } else {
+                offsetX = -Math.cos(angle);
+                offsetY = -Math.sin(angle);
+                nextOffsetX = Math.cos(angle);
+                nextOffsetY = Math.sin(angle);
             }
-
-            takenAngles.push(closestAngle);
-
-            var dx = Math.sin(closestAngle * (Math.PI / 180)) * 100;
-            var dy = Math.cos(closestAngle * (Math.PI / 180)) * 100;
-
-            NodesContainer.children[connectedNodes[j][0]].x = NodesContainer.children[i].x - dx;
-            NodesContainer.children[connectedNodes[j][0]].y = NodesContainer.children[i].y - dy;
-
+        
+            NodesContainer.children[connectedNode].x += offsetX;
+            NodesContainer.children[connectedNode].y += offsetY;
+        
+            NodesContainer.children[nextConnectedNode].x += nextOffsetX;
+            NodesContainer.children[nextConnectedNode].y += nextOffsetY;
         }
+
     }
+    return stress;
 }

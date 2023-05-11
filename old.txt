@@ -72,3 +72,44 @@
                     NodesContainer.children[i].x -= offsetX;
                     NodesContainer.children[i].y -= offsetY;
                 }*/
+
+
+// get the other nodes that are connected to this node
+for (var j = 1; j < connectedNodes.length - 1; j++) {
+    const differenceBetweenConnectedNodes = 360 / (connectedNodes.length);
+
+    // get the connected node
+    var connectedNode = connectedNodes[j][0] == i ? connectedNodes[j][1] : connectedNodes[j][0];
+    // get the next connected node if it exists
+    var nextConnectedNode = connectedNodes[j+1][0] == i ? connectedNodes[j+1][1] : connectedNodes[j+1][0];
+
+    // get the angle between connectedNode and nextConnectedNode
+    var dx = NodesContainer.children[nextConnectedNode].x - NodesContainer.children[connectedNode].x;
+    var dy = NodesContainer.children[nextConnectedNode].y - NodesContainer.children[connectedNode].y;
+    var angle = (Math.atan2(dx, dy) * (180 / Math.PI) + 360) % 360;
+
+    // determine if connectedNode or nextConnectedNode should be moved clockwise or anti-clockwise
+    var clockwise = angle > differenceBetweenConnectedNodes ? true : false;
+
+    // move the connectedNode
+    var offsetX, nextOffsetX = 0;
+    var offsetY, nextOffsetY = 0;
+
+    if (clockwise) {
+        offsetX = Math.cos(angle) * 1;
+        offsetY = Math.sin(angle) * 1;
+        nextOffsetX = Math.cos(angle) * -1;
+        nextOffsetY = Math.sin(angle) * -1;
+    } else {
+        offsetX = Math.cos(angle) * -1;
+        offsetY = Math.sin(angle) * -1;
+        nextOffsetX = Math.cos(angle) * 1;
+        nextOffsetY = Math.sin(angle) * 1;
+    }
+
+    NodesContainer.children[connectedNode].x += offsetX;
+    NodesContainer.children[connectedNode].y += offsetY;
+
+    NodesContainer.children[nextConnectedNode].x += nextOffsetX;
+    NodesContainer.children[nextConnectedNode].y += nextOffsetY;
+}
