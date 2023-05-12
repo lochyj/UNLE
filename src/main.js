@@ -49,34 +49,20 @@ app.stage.addChild(NodesContainer);
 let dragTarget = null;
 const acceptableStress = 0.05;
 
-const numNodes = 12;
+const numNodes = 5;
 
 var testEdges = [
-    [1, 0, 0],
-    [2, 0, 0],
-    [3, 0, 0],
-    [4, 0, 0],
-    [5, 0, 0],
-    [6, 0, 0],
-    [7, 0, 0],
-    [8, 0, 0],
-    [9, 0, 0],
-    [10, 0, 0],
-    [11, 0, 0],
+    [0, 1, 0],
+    [1, 2, 0],
+    [2, 3, 0],
+    [3, 4, 0],
 ]
 
 var nodesEdgeNum = [
-    11,
     1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
+    2,
+    2,
+    2,
     1,
 ]
 
@@ -93,8 +79,10 @@ function onDragMove(event) {
     noDiff = false;
     locked.x = dragTarget.x;
     locked.y = dragTarget.y;
-    applyCollisions();
     drawLines();
+    applyStress();
+    applyCollisions();
+
     previousStress = 999;
 }
 
@@ -144,7 +132,8 @@ async function main() {
             console.log("waiting!")
             continue;
         }
-    
+        
+        drawLines();
         applyStress();
         constrainToBounds();
         applyCollisions();
@@ -154,7 +143,7 @@ async function main() {
             dragTarget.y = locked.y;
         }
 
-        drawLines();
+        //drawLines();
         await sleep(16);
     }
     
@@ -360,6 +349,7 @@ function applyEdgeStress() {
     return stress;
 }
 
+//TODO: this function requires to SERIOUS optimization and a refactor to make it readable...
 function applyNodeStress() {
     var stress = 0;
     for (var i = 0; i < nodesEdgeNum.length; i++) {
@@ -387,56 +377,92 @@ function applyNodeStress() {
             return aAngle - bAngle;
         });
 
+        const differenceBetweenConnectedNodes = 360 / (connectedNodes.length - 1);
+
         // get the other nodes that are connected to this node
         for (var j = 1; j < connectedNodes.length - 1; j++) {
-            const differenceBetweenConnectedNodes = 360 / (connectedNodes.length);
-        
-            // get the connected node
+
+            //TODO: move this to a function to prevent repeat
+
             var connectedNode = connectedNodes[j][0] == i ? connectedNodes[j][1] : connectedNodes[j][0];
-            // get the next connected node if it exists
             var nextConnectedNode = connectedNodes[j+1][0] == i ? connectedNodes[j+1][1] : connectedNodes[j+1][0];
-        
-            // get the angle between connectedNode and nextConnectedNode
-            var c_dx = currentNode.x - NodesContainer.children[connectedNode].x;
-            var c_dy = currentNode.y - NodesContainer.children[connectedNode].y;
 
-            var c_angle = (Math.atan2(c_dx, c_dy) * (180 / Math.PI) + 360) % 360;
+            // get the length of edge currentNode to connectedNode from testEdges
+            var a_length = testEdges.filter(function (edge) {
+                return edge[0] == connectedNode && edge[1] == i || edge[1] == connectedNode && edge[0] == i;
+            })[0][2];
 
-            var nc_dx = currentNode.x - NodesContainer.children[nextConnectedNode].x;
-            var nc_dy = currentNode.y - NodesContainer.children[nextConnectedNode].y;
+            // get the length of edge currentNode to nextConnectedNode from testEdges
+            var b_length = testEdges.filter(function (edge) {
+                return edge[0] == nextConnectedNode && edge[1] == i || edge[1] == nextConnectedNode && edge[0] == i;
+            })[0][2];
 
-            var nc_angle = (Math.atan2(nc_dx, nc_dy) * (180 / Math.PI) + 360) % 360;
+            // var a_dx = currentNode.x - NodesContainer.children[connectedNode].x;
+            // var a_dy = currentNode.y - NodesContainer.children[connectedNode].y;
+            // var a_length = Math.sqrt(a_dx * a_dx + a_dy * a_dy);
 
-            var angle = (nc_angle - c_angle);
 
-            console.log(angle)
+            // var b_dx = currentNode.x - NodesContainer.children[nextConnectedNode].x;
+            // var b_dy = currentNode.y - NodesContainer.children[nextConnectedNode].y;
+            // var b_length = Math.sqrt(b_dx * b_dx + b_dy * b_dy);
         
-            // determine if connectedNode or nextConnectedNode should be moved clockwise or anti-clockwise
-            var clockwise = angle > differenceBetweenConnectedNodes ? true : false;
-        
-            // move the connectedNode
-            var offsetX, nextOffsetX = 0;
-            var offsetY, nextOffsetY = 0;
-        
-            if (clockwise) {
-                offsetX = Math.cos(angle);
-                offsetY = Math.sin(angle);
-                nextOffsetX = -Math.cos(angle);
-                nextOffsetY = -Math.sin(angle);
-            } else {
-                offsetX = -Math.cos(angle);
-                offsetY = -Math.sin(angle);
-                nextOffsetX = Math.cos(angle);
-                nextOffsetY = Math.sin(angle);
-            }
-        
-            NodesContainer.children[connectedNode].x += offsetX;
-            NodesContainer.children[connectedNode].y += offsetY;
-        
-            NodesContainer.children[nextConnectedNode].x += nextOffsetX;
-            NodesContainer.children[nextConnectedNode].y += nextOffsetY;
+            // Cosine rule to determine the length of the "invisible" edge to be added between the two nodes connectedNode and nextConnectedNode to space them evenly
+            var constraintLength = Math.sqrt(a_length * a_length + b_length * b_length - 2 * a_length * b_length * Math.cos(toRadians(differenceBetweenConnectedNodes)));
+            console.log(constraintLength)
+            stress += applyEdgeStressToNodes(NodesContainer.children[connectedNode], NodesContainer.children[nextConnectedNode], constraintLength);
         }
 
+        // get the first and last nodes
+        var connectedNode = connectedNodes[0][0] == i ? connectedNodes[0][1] : connectedNodes[0][0];
+        var nextConnectedNode = connectedNodes[connectedNodes.length - 1][0] == i ? connectedNodes[connectedNodes.length - 1][1] : connectedNodes[connectedNodes.length - 1][0];
+
+        var a_length = testEdges.filter(function (edge) {
+            return edge[0] == connectedNode && edge[1] == i || edge[1] == connectedNode && edge[0] == i;
+        })[0][2];
+
+        // get the length of edge currentNode to nextConnectedNode from testEdges
+        var b_length = testEdges.filter(function (edge) {
+            return edge[0] == nextConnectedNode && edge[1] == i || edge[1] == nextConnectedNode && edge[0] == i;
+        })[0][2];
+
+        // var a_dx = currentNode.x - NodesContainer.children[connectedNode].x;
+        // var a_dy = currentNode.y - NodesContainer.children[connectedNode].y;
+        // var a_length = Math.sqrt(a_dx * a_dx + a_dy * a_dy);
+
+
+        // var b_dx = currentNode.x - NodesContainer.children[nextConnectedNode].x;
+        // var b_dy = currentNode.y - NodesContainer.children[nextConnectedNode].y;
+        // var b_length = Math.sqrt(b_dx * b_dx + b_dy * b_dy);
+    
+        // Cosine rule to determine the length of the "invisible" edge to be added between the two nodes connectedNode and nextConnectedNode to space them evenly
+        var constraintLength = Math.sqrt(a_length * a_length + b_length * b_length - 2 * a_length * b_length * Math.cos(toRadians(differenceBetweenConnectedNodes)));
+        console.log(constraintLength)
+        if (constraintLength < 0.1)
+            constraintLength = a_length + b_length;
+        stress += applyEdgeStressToNodes(NodesContainer.children[connectedNode], NodesContainer.children[nextConnectedNode], constraintLength);
     }
+    return stress;
+}
+
+function applyEdgeStressToNodes(node1, node2, expectedLength) {
+    var stress = 0;
+    var dx = node2.x - node1.x;
+    var dy = node2.y - node1.y;
+    var length = Math.sqrt(dx * dx + dy * dy);
+    var difference = length - expectedLength;
+    var percent = difference / length / 2;
+
+    stress += Math.abs(difference);
+
+    var offsetX = dx * percent;
+    var offsetY = dy * percent;
+
+    drawLine(node1.x, node1.y, node2.x, node2.y, 1);
+
+    node1.x += offsetX;
+    node1.y += offsetY;
+    node2.x -= offsetX;
+    node2.y -= offsetY;
+
     return stress;
 }
