@@ -9,15 +9,16 @@
 
             let graph = new UNLE;
             //console.log(UNLE.randomX())
-            graph.add_node("Yes")
-            graph.add_node("Maybe")
-            graph.add_node("No")
-            graph.add_edge("Yes", "No", 100)
-            graph.add_edge("No", "Maybe", 100)
-            graph.add_edge("Maybe", "Yes", 100)
-            
+            graph.add_node(0)
+            for (let i = 1; i < 10; i++) {
+                graph.add_node(i)
+                graph.add_edge(0, i ,100)
+            }
 
-            graph.remove_node(graph.nodes()[0])
+            graph.add_node("Yes")
+            graph.add_edge(4, "Yes" ,100)
+
+            //graph.remove_node(graph.nodes()[0])
         </script>
     </body>
 </html>
