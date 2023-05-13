@@ -60,7 +60,6 @@ class UNLE {
         UNLE.dragTarget.parent.toLocal(event.global, null, UNLE.dragTarget.position);
         UNLE.locked.x = UNLE.dragTarget.x;
         UNLE.locked.y = UNLE.dragTarget.y;
-        UNLE.applyCollisions();
         UNLE.drawLines();   
     }
     
@@ -87,34 +86,6 @@ class UNLE {
     
     static toRadians(angle) {
         return angle * (Math.PI / 180);
-    }
-    
-    static applyCollisions() {
-        for (let x = 0; x < 3; x++) {
-            for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
-                for (let j = 0; j < UNLE.NodesContainer.children.length; j++) {
-                    if (i != j) {
-                        const a = UNLE.NodesContainer.children[i]
-                        const b = UNLE.NodesContainer.children[j]
-                        const dx = b.x - a.x
-                        const dy = b.y - a.y
-                        const dist = Math.sqrt(dx * dx + dy * dy)
-                        const minDist = (a.width + b.width) * 0.5
-                        if (dist < minDist) {
-                            const angle = Math.atan2(dy, dx)
-                            const tx = a.x + Math.cos(angle) * minDist
-                            const ty = a.y + Math.sin(angle) * minDist
-                            const ax = (tx - b.x) * 0.5
-                            const ay = (ty - b.y) * 0.5
-                            a.x -= ax
-                            a.y -= ay
-                            b.x += ax
-                            b.y += ay
-                        }
-                    }
-                }
-            }
-        }
     }
     
     static drawLine(x1, y1, x2, y2, width, value) {
@@ -208,50 +179,6 @@ class UNLE {
         UNLE.NodesContainer.addChild(node)
     }
     
-    static applyEdgePower() {
-        for (let i = 0; i < UNLE.testEdges.length; i++) {
-            //UNLE.NodesContainer.children[testEdges[i][0]]
-            // get the difference between the target node and the current node
-
-            //console.log(UNLE.NodesContainer)
-            //console.log(UNLE.testEdges)
-
-            //console.log(UNLE.NodesContainer.children[UNLE.testEdges[i][1]].x)
-            //console.log(UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]))
-
-  
-            const dx = UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).x - UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).x
-            const dy = UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).y - UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).y
-    
-            const edgeLen = UNLE.testEdges[i][2]
-    
-            const dist = Math.sqrt(dx * dx + dy * dy)
-    
-            /*
-            // if the distance is within 10% + or - of the edge length, don't apply a force
-            if ((edgeLen * 0.95) < dist && dist < (edgeLen * 1.05)) {
-                //console.log("Too Small")
-            }
-    
-            else {
-            */
-    
-            const diff = edgeLen - dist
-    
-            const percent = diff / (dist * UNLE.constant)
-    
-            const offsetX = dx * percent
-            const offsetY = dy * percent
-    
-            UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).x -= offsetX
-            UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).y -= offsetY
-            UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).x += offsetX
-            UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).y += offsetY 
-            //}
-    
-        }
-    }
-    
     static constrainToBounds() {
         // ensure all nodes are within the bounds of the canvas
         for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
@@ -321,11 +248,9 @@ class UNLE {
         while (true) {
 
             if (UNLE.testEdges != []) {
-                UNLE.applyEdgePower();
+                UNLE.fruchtermanReingold();
             }
-            UNLE.fruchtermanReingold();
             UNLE.constrainToBounds();
-            UNLE.applyCollisions();
     
             if (UNLE.shouldLock) {
                 UNLE.dragTarget.x = UNLE.locked.x;
