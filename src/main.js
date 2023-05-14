@@ -16,7 +16,7 @@ class UNLE {
         lineJoin: 'round' // Set the lineJoin to round
     }
 
-    static constant = 4;
+    static constant = 30;
 
     static shouldLock = false;
     static locked = {x: 0,y: 0};
@@ -28,7 +28,7 @@ class UNLE {
 
     static testEdges = [];
 
-    static nodesEdgeNum = [1];
+    static nodesEdgeNum = {};
 
     constructor(){
         document.body.appendChild(UNLE.app.view);
@@ -60,7 +60,6 @@ class UNLE {
         UNLE.dragTarget.parent.toLocal(event.global, null, UNLE.dragTarget.position);
         UNLE.locked.x = UNLE.dragTarget.x;
         UNLE.locked.y = UNLE.dragTarget.y;
-        UNLE.applyCollisions();
         UNLE.drawLines();   
     }
     
@@ -87,34 +86,6 @@ class UNLE {
     
     static toRadians(angle) {
         return angle * (Math.PI / 180);
-    }
-    
-    static applyCollisions() {
-        for (let x = 0; x < 3; x++) {
-            for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
-                for (let j = 0; j < UNLE.NodesContainer.children.length; j++) {
-                    if (i != j) {
-                        const a = UNLE.NodesContainer.children[i]
-                        const b = UNLE.NodesContainer.children[j]
-                        const dx = b.x - a.x
-                        const dy = b.y - a.y
-                        const dist = Math.sqrt(dx * dx + dy * dy)
-                        const minDist = (a.width + b.width) * 0.5
-                        if (dist < minDist) {
-                            const angle = Math.atan2(dy, dx)
-                            const tx = a.x + Math.cos(angle) * minDist
-                            const ty = a.y + Math.sin(angle) * minDist
-                            const ax = (tx - b.x) * 0.5
-                            const ay = (ty - b.y) * 0.5
-                            a.x -= ax
-                            a.y -= ay
-                            b.x += ax
-                            b.y += ay
-                        }
-                    }
-                }
-            }
-        }
     }
     
     static drawLine(x1, y1, x2, y2, width, value) {
@@ -170,6 +141,13 @@ class UNLE {
     static randomEdgePower() {
         return Math.floor(Math.random() * 150) + 70;
     }
+
+    // I copied this function from chatgpt
+    static getDistance(p1, p2) {
+        const dx = p1.x - p2.x;
+        const dy = p1.y - p2.y;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
     
     static createNode(x, y, rad, colour, id, text = id) {
     
@@ -201,48 +179,6 @@ class UNLE {
         UNLE.NodesContainer.addChild(node)
     }
     
-    static applyEdgePower() {
-        for (let i = 0; i < UNLE.testEdges.length; i++) {
-            //UNLE.NodesContainer.children[testEdges[i][0]]
-            // get the difference between the target node and the current node
-
-            //console.log(UNLE.NodesContainer)
-            //console.log(UNLE.testEdges)
-
-            //console.log(UNLE.NodesContainer.children[UNLE.testEdges[i][1]].x)
-            //console.log(UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]))
-
-  
-            const dx = UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).x - UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).x
-            const dy = UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).y - UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).y
-    
-            const edgeLen = UNLE.testEdges[i][2]
-    
-            const dist = Math.sqrt(dx * dx + dy * dy)
-    
-            // if the distance is within 10% + or - of the edge length, don't apply a force
-            if ((edgeLen * 0.95) < dist && dist < (edgeLen * 1.05)) {
-                //console.log("Too Small")
-            }
-    
-            else {
-    
-            const diff = edgeLen - dist
-    
-            const percent = diff / (dist * UNLE.constant)
-    
-            const offsetX = dx * percent
-            const offsetY = dy * percent
-    
-            UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).x -= offsetX
-            UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).y -= offsetY
-            UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).x += offsetX
-            UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).y += offsetY 
-            }
-    
-        }
-    }
-    
     static constrainToBounds() {
         // ensure all nodes are within the bounds of the canvas
         for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
@@ -252,58 +188,55 @@ class UNLE {
         }
     }
     
-    static spaceEdgesOnNode() {
-        // UNLE.NodesContainer
-        // testEdges 
-        // nodesEdgeNum
-    
-        for (let i = 0; i < UNLE.nodesEdgeNum.length; i++) {
-            let edges = UNLE.nodesEdgeNum[i];
-    
-            if (edges <= 1)
-                continue;
-    
-            let angleDiv = 360 / (edges);
-    
-            let connectedNodes = UNLE.testEdges.filter(function (edge) {
-                return edge[0] == i || edge[1] == i;
-            });
-    
-            if (connectedNodes.length != edges) {
-                console.log("PANIC, connected nodes doesn't equal the number of edges of vertex " + i)
-                continue;
+    static fruchtermanReingold() {
+        
+        const nodes = UNLE.NodesContainer.children
+        const edges = UNLE.testEdges
+        //console.log(edgesArray)
+
+        // START I COPIED THIS CODE FROM CHATGPT
+        // Initialize forces
+        nodes.forEach(node => {
+            node.dx = 0
+            node.dy = 0
+        })
+
+        // Calculate repulsive forces between nodes
+        nodes.forEach(node1 => {
+            nodes.forEach(node2 => {
+            if (node1 !== node2) {
+                const dx = node1.x - node2.x;
+                const dy = node1.y - node2.y;
+                const distance = UNLE.getDistance(node1, node2);
+                const force = (UNLE.constant * UNLE.constant) / distance;
+                node1.dx += (dx / distance) * force;
+                node1.dy += (dy / distance) * force;
             }
-    
-            let connectedAngles = [];
-            for (let x = 0; x < edges; x++) {
-                const dx = UNLE.NodesContainer.children[i].x - UNLE.NodesContainer.children[connectedNodes[x][0]].x;
-                const dy = UNLE.NodesContainer.children[i].y - UNLE.NodesContainer.children[connectedNodes[x][0]].y;
-                connectedAngles[x] = (Math.atan2(dx, dy) * (180 / Math.PI) + 360) % 360;
-            }
-    
-            let takenAngles = [];
-    
-            console.log(takenAngles)
-    
-            for (let j = 0; j < edges; j++) {
-                let angle = connectedAngles[j];
-    
-                let closestAngle = Math.round(angle / angleDiv) * angleDiv;
-    
-                while (takenAngles.includes(closestAngle) && closestAngle + angleDiv <= 360) {
-                    closestAngle += angleDiv;
-                }
-    
-                takenAngles.push(closestAngle);
-    
-                const dx = Math.sin(closestAngle * (Math.PI / 180));
-                const dy = Math.cos(closestAngle * (Math.PI / 180));
-    
-                UNLE.NodesContainer.children[connectedNodes[j][0]].x -= dx;
-                UNLE.NodesContainer.children[connectedNodes[j][0]].y -= dy;
-    
-            }
-        }
+            })
+        })
+
+        // Calculate attractive forces along edges
+        edges.forEach(edge => {
+            const source = UNLE.NodesContainer.getChildByName(edge[0]);
+            const target = UNLE.NodesContainer.getChildByName(edge[1]);
+            const dx = target.x - source.x;
+            const dy = target.y - source.y;
+            const distance = UNLE.getDistance(source, target);
+            const force = (distance * distance) / (UNLE.constant * edge[2]);
+            source.dx += (dx / distance) * force;
+            source.dy += (dy / distance) * force;
+            target.dx -= (dx / distance) * force;
+            target.dy -= (dy / distance) * force;
+        });
+
+        // END I COPIED THIS CODE FROM CHATGPT
+        // Move each node
+        nodes.forEach(node => {
+            if (Math.abs(node.dx) > 0.1)
+                node.x += node.dx;
+            if (Math.abs(node.dy) > 0.1)
+                node.y += node.dy;
+        })
     }
 
     static sleep(ms) {
@@ -315,11 +248,9 @@ class UNLE {
         while (true) {
 
             if (UNLE.testEdges != []) {
-                UNLE.applyEdgePower();
+                UNLE.fruchtermanReingold();
             }
-            UNLE.spaceEdgesOnNode();
             UNLE.constrainToBounds();
-            UNLE.applyCollisions();
     
             if (UNLE.shouldLock) {
                 UNLE.dragTarget.x = UNLE.locked.x;
@@ -355,6 +286,7 @@ class UNLE {
 
     add_node(id = None, value = id) {
         UNLE.createNode(UNLE.randomX(), UNLE.randomY(), 20, 0x3A3A3A, id, value)
+        UNLE.nodesEdgeNum[id] = 0
     }
 
     nodes(){
@@ -399,5 +331,8 @@ class UNLE {
 
     add_edge(id1, id2, len = 100) {
         UNLE.testEdges.push([id1, id2, len])
+        UNLE.nodesEdgeNum[id1] += 1
+        UNLE.nodesEdgeNum[id2] += 1
+        console.log(UNLE.nodesEdgeNum)
     }
 }
