@@ -16,22 +16,26 @@ class UNLE {
         lineJoin: 'round' // Set the lineJoin to round
     }
 
-    static constant = 30;
+    static constant = 15;
 
     static shouldLock = false;
-    static locked = {x: 0,y: 0};
+    static locked = {x: 0, y: 0};
 
     static LinesContainer;
     static NodesContainer;
 
     static dragTarget = null;
 
-    static testEdges = [];
+    static edgesList = [];
 
     static nodesEdgeNum = {};
 
-    constructor(){
+    constructor(data){
+        UNLE.constrainBounds = data.constrainBounds || [];
+
         document.body.appendChild(UNLE.app.view);
+
+        UNLE.ZoomContainer = new PIXI.Container();
 
         UNLE.lineG.beginFill(0xFFFFFF, 1);
         UNLE.lineG.drawRect(0,0,1,1);
@@ -45,10 +49,16 @@ class UNLE {
         UNLE.app.stage.on('pointerup', UNLE.onDragEnd);
         UNLE.app.stage.on('pointerupoutside', UNLE.onDragEnd);
 
+
         UNLE.LinesContainer = new PIXI.Container();
-        UNLE.app.stage.addChild(UNLE.LinesContainer);
         UNLE.NodesContainer = new PIXI.Container();
-        UNLE.app.stage.addChild(UNLE.NodesContainer);
+
+        UNLE.ZoomContainer.addChild(UNLE.LinesContainer);
+        UNLE.ZoomContainer.addChild(UNLE.NodesContainer);
+        UNLE.app.stage.addChild(UNLE.ZoomContainer);
+
+
+        UNLE.ZoomContainer.scale = {x: 0.5, y: 0.5};
         
         UNLE.main();
     }
@@ -108,26 +118,26 @@ class UNLE {
     // Implement this fully later
     static drawLines() {
         UNLE.LinesContainer.removeChildren();
-        //console.log(UNLE.app.stage.children[1].parent.children[0])
-        for (var i = 0; i < UNLE.testEdges.length; i++) {
+
+        UNLE.edgesList.forEach(edge => {
             UNLE.drawLine(
-                UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).x,
-                UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][0]).y,
-                UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).x,
-                UNLE.NodesContainer.getChildByName(UNLE.testEdges[i][1]).y,
+                UNLE.NodesContainer.getChildByName(edge[0]).x,
+                UNLE.NodesContainer.getChildByName(edge[0]).y,
+                UNLE.NodesContainer.getChildByName(edge[1]).x,
+                UNLE.NodesContainer.getChildByName(edge[1]).y,
                 3,
-                UNLE.testEdges[i][2]
+                edge[2]
             )
-        }
+        });
     }
     
     // get a random value between stage.width and 0
     static randomX() {
-        return Math.floor(Math.random() * UNLE.app.screen.width);
+        return Math.floor(Math.random() * UNLE.ZoomContainer.width);
     }
     
     static randomY() {
-        return Math.floor(Math.random() * UNLE.app.screen.height);
+        return Math.floor(Math.random() * UNLE.ZoomContainer.height);
     }
     
     static randomColour() {
@@ -146,6 +156,34 @@ class UNLE {
         const dx = p1.x - p2.x;
         const dy = p1.y - p2.y;
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    static applyCollisions() {
+        for (let x = 0; x < 3; x++) {
+            for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
+                for (let j = 0; j < UNLE.NodesContainer.children.length; j++) {
+                    if (i != j) {
+                        const a = UNLE.NodesContainer.children[i]
+                        const b = UNLE.NodesContainer.children[j]
+                        const dx = b.x - a.x
+                        const dy = b.y - a.y
+                        const dist = Math.sqrt(dx * dx + dy * dy)
+                        const minDist = (a.width + b.width) * 0.5
+                        if (dist < minDist) {
+                            const angle = Math.atan2(dy, dx)
+                            const tx = a.x + Math.cos(angle) * minDist
+                            const ty = a.y + Math.sin(angle) * minDist
+                            const ax = (tx - b.x) * 0.5
+                            const ay = (ty - b.y) * 0.5
+                            a.x -= ax
+                            a.y -= ay
+                            b.x += ax
+                            b.y += ay
+                        }
+                    }
+                }
+            }
+        }
     }
     
     static createNode(x, y, rad, colour, id, text = id) {
@@ -179,19 +217,20 @@ class UNLE {
     }
     
     static constrainToBounds() {
+        const width = UNLE.ZoomContainer.width;
+        const height = UNLE.ZoomContainer.height;
         // ensure all nodes are within the bounds of the canvas
         for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
             let node = UNLE.NodesContainer.children[i];
-            node.x = Math.min(Math.max(node.x, 0), UNLE.app.screen.width);
-            node.y = Math.min(Math.max(node.y, 0), UNLE.app.screen.height);
+            node.x = Math.min(Math.max(node.x, 0), width);
+            node.y = Math.min(Math.max(node.y, 0), height);
         }
     }
     
     static fruchtermanReingold() {
         
         const nodes = UNLE.NodesContainer.children;
-        const edges = UNLE.testEdges;
-        //console.log(edgesArray)
+        const edges = UNLE.edgesList;
 
         // Initialize forces
         nodes.forEach(node => {
@@ -245,11 +284,10 @@ class UNLE {
 
         while (true) {
 
-            //UNLE.constant = Math.sqrt((UNLE.app.screen.width * UNLE.app.screen.height) / UNLE.NodesContainer.length - 1);
-
-            if (UNLE.testEdges != []) {
+            if (UNLE.edgesList != []) {
                 UNLE.fruchtermanReingold();
             }
+            UNLE.applyCollisions();
             UNLE.constrainToBounds();
     
             if (UNLE.shouldLock) {
@@ -268,7 +306,9 @@ class UNLE {
     //  ----------------|
 
     add_node(id = None, value = id) {
-        UNLE.createNode(UNLE.app.screen.width / 2 + UNLE.randomX() * 0.1, UNLE.app.screen.height / 2 + UNLE.randomX() * 0.1, 20, 0x3A3A3A, id, value)
+        const width = UNLE.ZoomContainer.width;
+        const height = UNLE.ZoomContainer.height;
+        UNLE.createNode(width / 2 + UNLE.randomX() * 0.5, height / 2 + UNLE.randomX() * 0.5, 20, 0x3A3A3A, id, value)
         UNLE.nodesEdgeNum[id] = 0
     }
 
@@ -280,7 +320,7 @@ class UNLE {
     remove_node(node) {
         //console.log(node.name)
         let tempNodeContainer = new PIXI.Container()
-        let tempTestEdges = []
+        let tempedgesList = []
 
         //console.log(UNLE.NodesContainer.children)
 /*
@@ -296,11 +336,11 @@ class UNLE {
         }
 
         // Iterate over each child in test edge
-        for (let i = 0; i < UNLE.testEdges.length; i++){
+        for (let i = 0; i < UNLE.edgesList.length; i++){
 
-            if (!UNLE.testEdges[i].includes(node.name)) {
+            if (!UNLE.edgesList[i].includes(node.name)) {
                 //console.log("Please do it")
-                tempTestEdges.push(UNLE.testEdges[i])
+                tempedgesList.push(UNLE.edgesList[i])
             }
         }
 
@@ -308,12 +348,12 @@ class UNLE {
         //console.log(tempContainer)
 
         UNLE.NodesContainer = tempNodeContainer
-        UNLE.testEdges = tempTestEdges
+        UNLE.edgesList = tempedgesList
         */
     }
 
     add_edge(id1, id2, len = 100) {
-        UNLE.testEdges.push([id1, id2, len])
+        UNLE.edgesList.push([id1, id2, len])
         UNLE.nodesEdgeNum[id1] += 1
         UNLE.nodesEdgeNum[id2] += 1
         console.log(UNLE.nodesEdgeNum)

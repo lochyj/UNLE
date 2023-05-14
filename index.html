@@ -6,20 +6,16 @@
     <body>
         <script type="module">
             import UNLE from './src/main.js'
-            var pokemon = ["Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle"]
-            var trainers = ["Ash", "Misty", "Brock", "Gary", "Jessie", "James", "Meowth"]
 
-            let graph = new UNLE();
-            //console.log(UNLE.randomX())
-            graph.add_node(0, "Pokemon")
-            for (let i = 1; i < 10; i++) {
+            let graph = new UNLE({});
+
+            for (let i = 0; i < 500; i++) {
                 graph.add_node(i)
-                graph.add_edge(0, i, 100)
             }
 
-            //graph.add_node("Trainers")
-
-            //graph.remove_node(graph.nodes()[0])
+            for (var i = 0; i < 500 - 1; i++) {
+                graph.add_edge(i, i + 1, 100)
+            }
         </script>
     </body>
 </html>
