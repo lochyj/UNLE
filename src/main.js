@@ -142,18 +142,17 @@ class UNLE {
         return Math.floor(Math.random() * 150) + 70;
     }
 
-    // I copied this function from chatgpt
     static getDistance(p1, p2) {
         const dx = p1.x - p2.x;
         const dy = p1.y - p2.y;
         return Math.sqrt(dx * dx + dy * dy);
-      }
+    }
     
     static createNode(x, y, rad, colour, id, text = id) {
     
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
-        //nodeG.lineStyle(2, 0xa0a0a0 | colour, 1);
+        //nodeG.lineStyle(2, 0x303030 | colour, 1);
         nodeG.beginFill(colour, 1);
         nodeG.drawCircle(0, 0, rad);
         nodeG.endFill();
@@ -190,27 +189,26 @@ class UNLE {
     
     static fruchtermanReingold() {
         
-        const nodes = UNLE.NodesContainer.children
-        const edges = UNLE.testEdges
+        const nodes = UNLE.NodesContainer.children;
+        const edges = UNLE.testEdges;
         //console.log(edgesArray)
 
-        // START I COPIED THIS CODE FROM CHATGPT
         // Initialize forces
         nodes.forEach(node => {
-            node.dx = 0
-            node.dy = 0
+            node.dx = 0;
+            node.dy = 0;
         })
 
         // Calculate repulsive forces between nodes
         nodes.forEach(node1 => {
             nodes.forEach(node2 => {
             if (node1 !== node2) {
-                const dx = node1.x - node2.x;
-                const dy = node1.y - node2.y;
-                const distance = UNLE.getDistance(node1, node2);
+                const delta_x = node1.x - node2.x;
+                const delta_y = node1.y - node2.y;
+                const distance = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
                 const force = (UNLE.constant * UNLE.constant) / distance;
-                node1.dx += (dx / distance) * force;
-                node1.dy += (dy / distance) * force;
+                node1.dx += (delta_x / distance) * force;
+                node1.dy += (delta_y / distance) * force;
             }
             })
         })
@@ -219,21 +217,21 @@ class UNLE {
         edges.forEach(edge => {
             const source = UNLE.NodesContainer.getChildByName(edge[0]);
             const target = UNLE.NodesContainer.getChildByName(edge[1]);
-            const dx = target.x - source.x;
-            const dy = target.y - source.y;
-            const distance = UNLE.getDistance(source, target);
+            const delta_x = target.x - source.x;
+            const delta_y = target.y - source.y;
+            const distance = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
             const force = (distance * distance) / (UNLE.constant * edge[2]);
-            source.dx += (dx / distance) * force;
-            source.dy += (dy / distance) * force;
-            target.dx -= (dx / distance) * force;
-            target.dy -= (dy / distance) * force;
+            source.dx += (delta_x / distance) * force;
+            source.dy += (delta_y / distance) * force;
+            target.dx -= (delta_x / distance) * force;
+            target.dy -= (delta_y / distance) * force;
         });
 
-        // END I COPIED THIS CODE FROM CHATGPT
         // Move each node
         nodes.forEach(node => {
             if (Math.abs(node.dx) > 0.1)
                 node.x += node.dx;
+            
             if (Math.abs(node.dy) > 0.1)
                 node.y += node.dy;
         })
@@ -246,6 +244,8 @@ class UNLE {
     static async main() {
 
         while (true) {
+
+            //UNLE.constant = Math.sqrt((UNLE.app.screen.width * UNLE.app.screen.height) / UNLE.NodesContainer.length - 1);
 
             if (UNLE.testEdges != []) {
                 UNLE.fruchtermanReingold();
@@ -263,29 +263,12 @@ class UNLE {
         
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    //  ----------------|
+    //  Public Functions|
+    //  ----------------|
 
     add_node(id = None, value = id) {
-        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), 20, 0x3A3A3A, id, value)
+        UNLE.createNode(UNLE.app.screen.width / 2 + UNLE.randomX() * 0.1, UNLE.app.screen.height / 2 + UNLE.randomX() * 0.1, 20, 0x3A3A3A, id, value)
         UNLE.nodesEdgeNum[id] = 0
     }
 
@@ -336,3 +319,5 @@ class UNLE {
         console.log(UNLE.nodesEdgeNum)
     }
 }
+
+export default UNLE;

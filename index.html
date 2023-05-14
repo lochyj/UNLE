@@ -2,21 +2,22 @@
 <html>
     <head>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script src="./src/main.js"></script>
     </head>
     <body>
-        <script>
+        <script type="module">
+            import UNLE from './src/main.js'
+            var pokemon = ["Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle"]
+            var trainers = ["Ash", "Misty", "Brock", "Gary", "Jessie", "James", "Meowth"]
 
-            let graph = new UNLE;
+            let graph = new UNLE();
             //console.log(UNLE.randomX())
-            graph.add_node(0)
+            graph.add_node(0, "Pokemon")
             for (let i = 1; i < 10; i++) {
                 graph.add_node(i)
-                graph.add_edge(0, i ,100)
+                graph.add_edge(0, i, 100)
             }
 
-            graph.add_node("Yes")
-            graph.add_edge(4, "Yes" ,100)
+            //graph.add_node("Trainers")
 
             //graph.remove_node(graph.nodes()[0])
         </script>
