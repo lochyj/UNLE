@@ -11,6 +11,7 @@ class UNLE {
     //This is neccessary to reuse the same texture for a simple line
     static lineG = new PIXI.Graphics();
     static lineT;
+    static activeLineT;
 
     static textOptions = {
         font: "bold 64px Roboto", // Set  style, size and font
@@ -33,6 +34,8 @@ class UNLE {
 
     static edgesList = [];
 
+    static activeEdges = [];
+
     static nodesEdgeNum = {};
 
     constructor(data){
@@ -45,6 +48,13 @@ class UNLE {
         UNLE.lineG.endFill();
 
         UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
+
+        UNLE.lineG.beginFill(0x00FF00, 1);
+        UNLE.lineG.drawRect(0, 0, 1, 1);
+        UNLE.lineG.endFill();
+
+        UNLE.activeLineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
+
 
         UNLE.app.stage.eventMode = 'dynamic'; // Changed interactive to eventMode
 
@@ -110,6 +120,20 @@ class UNLE {
     
         UNLE.LinesContainer.addChild(line);
     }
+
+    static drawActiveLine(x1, y1, x2, y2, width) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const line = new PIXI.Sprite(UNLE.activeLineT);
+        line.x = x2;
+        line.y = y2;
+        line.height = Math.sqrt((dx*dx) + (dy*dy));
+        line.width = width;
+    
+        line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
+    
+        UNLE.LinesContainer.addChild(line);
+    }
     
     // Implement this fully later
     static drawLines() {
@@ -123,6 +147,16 @@ class UNLE {
                 UNLE.NodesContainer.getChildByName(edge[1]).y,
                 2,
                 edge[2]
+            )
+        });
+
+        UNLE.activeEdges.forEach(edge => {
+            UNLE.drawActiveLine(
+                UNLE.NodesContainer.getChildByName(edge[0]).x,
+                UNLE.NodesContainer.getChildByName(edge[0]).y,
+                UNLE.NodesContainer.getChildByName(edge[1]).x,
+                UNLE.NodesContainer.getChildByName(edge[1]).y,
+                2
             )
         });
     }
@@ -207,7 +241,7 @@ class UNLE {
     
         node.eventMode = 'dynamic'; // Changed interactive to eventMode
         node.on('pointerdown', UNLE.onDragStart, node);
-        
+
         node.x = x;
         node.y = y;
         UNLE.NodesContainer.addChild(node)
@@ -350,7 +384,16 @@ class UNLE {
         UNLE.edgesList.push([id1, id2, len])
         UNLE.nodesEdgeNum[id1] += 1
         UNLE.nodesEdgeNum[id2] += 1
-        console.log(UNLE.nodesEdgeNum)
+    }
+
+    add_active_edge(id1, id2) {
+        UNLE.activeEdges.push([id1, id2])
+    }
+
+    remove_active_edge(id1, id2) {
+        if (UNLE.activeEdges.includes([id1, id2])) {
+            UNLE.activeEdges.splice(UNLE.activeEdges.indexOf([id1, id2]), 1)
+        }
     }
 }
 
