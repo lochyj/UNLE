@@ -2,6 +2,7 @@
 <html>
     <head>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="src/gpu-browser.js"></script> <!--Min file does not load-->
     </head>
     <body>
         <script type="module">
@@ -9,25 +10,65 @@
 
             let graph = new UNLE({});
 
+            /*// Stability test
+            let edgeLen = 200
+            graph.add_node(0)
+            for (let i = 1; i < 1000; i++) {
+                graph.add_node(i)
+                graph.add_edge(i-1, i ,edgeLen)
+            }
+            */
+
+            /* Circle
+            let edgeLen = 500
+            graph.add_node(0)
+            for (let i = 1; i < 20; i++) {
+                graph.add_node(i)
+                graph.add_edge(0, i ,edgeLen)
+            }
+            */
+            
+
+            ///*
+            let edgeLen = 200
             graph.add_node(0)
             for (let i = 1; i < 10; i++) {
                 graph.add_node(i)
-                graph.add_edge(0, i ,100)
+                graph.add_edge(0, i ,edgeLen)
             }
 
             graph.add_node("Yes")
-            graph.add_edge(4, "Yes", 100)
+            graph.add_edge(4, "Yes", edgeLen)
 
             for (let i = 10; i < 19; i++) {
                 graph.add_node(i)
-                graph.add_edge("Yes", i ,100)
+                graph.add_edge("Yes", i ,edgeLen)
             }
 
-            graph.add_edge(5, 15, 100)
-            graph.add_edge(7, 12, 100)
+            graph.add_edge(5, 15, edgeLen)
+            graph.add_edge(7, 12, edgeLen)
 
             graph.add_active_edge(5, 15)
             graph.add_active_edge(5, 0)
+            //*/
+
+            ///* Experimenting moving calculations to gpu.        Also check line 5
+            // GPU is a constructor and namespace for browser
+            const gpu = new GPU.GPU();
+            const multiplyMatrix = gpu.createKernel(function(a, b) {
+                let sum = 0;
+                for (let i = 0; i < 512; i++) {
+                    sum += a[this.thread.y][i] * b[i][this.thread.x];
+                }
+                return sum;
+            }).setOutput([512, 512]);
+
+            const c = multiplyMatrix([3,2], [2,5]);
+
+            console.log(c)
+            //*/
+            
+            
         </script>
     </body>
 </html>

@@ -22,7 +22,7 @@ class UNLE {
         lineJoin: 'round' // Set the lineJoin to round
     }
 
-    static constant = 15;
+    static constant = 20;
 
     static shouldLock = false;
     static locked = {x: 0, y: 0};
@@ -216,7 +216,7 @@ class UNLE {
         }
     }
     
-    static createNode(x, y, rad, colour, id, text = id) {
+    static createNode(xC, yC, rad, colour, id, text = id) {
     
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
@@ -242,8 +242,9 @@ class UNLE {
         node.eventMode = 'dynamic'; // Changed interactive to eventMode
         node.on('pointerdown', UNLE.onDragStart, node);
 
-        node.x = x;
-        node.y = y;
+        // Place in center of screen
+        node.x = xC + UNLE.app.renderer.width/2;
+        node.y = yC + UNLE.app.renderer.height/2;
         UNLE.NodesContainer.addChild(node)
     }
     
@@ -276,7 +277,7 @@ class UNLE {
                     const delta_x = node1.x - node2.x;
                     const delta_y = node1.y - node2.y;
                     const distance = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
-                    const force = (UNLE.constant * UNLE.constant) / distance;
+                    const force = ((UNLE.constant * distance * distance) ** 0.3) / distance; // I guessed this part to be the solution to fixing the physics engine
                     node1.dx += (delta_x / distance) * force;
                     node1.dy += (delta_y / distance) * force;
                 }
@@ -299,10 +300,10 @@ class UNLE {
 
         // Move each node
         nodes.forEach(node => {
-            if (Math.abs(node.dx) > 0.1)
+            //if (Math.abs(node.dx) > 0.001)
                 node.x += node.dx;
             
-            if (Math.abs(node.dy) > 0.1)
+            //if (Math.abs(node.dy) > 0.001)
                 node.y += node.dy;
         })
     }
@@ -316,6 +317,7 @@ class UNLE {
         while (true) {
 
             if (UNLE.edgesList != []) {
+                UNLE.applyCollisions() // This line is absolutely necessary or nodes made wipe themselves into the shadow realm if they overlap
                 UNLE.fruchtermanReingold();
             }
             UNLE.constrainToBounds();
@@ -336,7 +338,7 @@ class UNLE {
     //  ----------------|
 
     add_node(id = None, value = id) {
-        UNLE.createNode(UNLE.randomX(), UNLE.randomX(), 20, UNLE.randomColour(), id, value)
+        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), 20, UNLE.randomColour(), id, value)
         UNLE.nodesEdgeNum[id] = 0
     }
 
@@ -395,6 +397,27 @@ class UNLE {
             UNLE.activeEdges.splice(UNLE.activeEdges.indexOf([id1, id2]), 1)
         }
     }
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default UNLE;
