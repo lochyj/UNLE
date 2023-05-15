@@ -1,7 +1,12 @@
 "use strict"
 
 class UNLE {
-    static app = new PIXI.Application({antialias: true, backgroundColor: 0x000000});
+    static app = new PIXI.Application({
+        resolution: 1,
+        autoDensity: true,
+        antialias: true,
+        backgroundColor: 0x0A0A0A
+    });
 
     //This is neccessary to reuse the same texture for a simple line
     static lineG = new PIXI.Graphics();
@@ -35,13 +40,11 @@ class UNLE {
 
         document.body.appendChild(UNLE.app.view);
 
-        UNLE.ZoomContainer = new PIXI.Container();
-
         UNLE.lineG.beginFill(0xFFFFFF, 1);
-        UNLE.lineG.drawRect(0,0,1,1);
+        UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
 
-        UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG);
+        UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
 
         UNLE.app.stage.eventMode = 'dynamic'; // Changed interactive to eventMode
 
@@ -53,13 +56,9 @@ class UNLE {
         UNLE.LinesContainer = new PIXI.Container();
         UNLE.NodesContainer = new PIXI.Container();
 
-        UNLE.ZoomContainer.addChild(UNLE.LinesContainer);
-        UNLE.ZoomContainer.addChild(UNLE.NodesContainer);
-        UNLE.app.stage.addChild(UNLE.ZoomContainer);
+        UNLE.app.stage.addChild(UNLE.LinesContainer);
+        UNLE.app.stage.addChild(UNLE.NodesContainer);
 
-
-        UNLE.ZoomContainer.scale = {x: 0.5, y: 0.5};
-        
         UNLE.main();
     }
 
@@ -99,8 +98,8 @@ class UNLE {
     }
     
     static drawLine(x1, y1, x2, y2, width, value) {
-        const dx = x2-x1;
-        const dy = y2-y1;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
         const line = new PIXI.Sprite(UNLE.lineT);
         line.x = x2;
         line.y = y2;
@@ -108,9 +107,6 @@ class UNLE {
         line.width = width;
     
         line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
-        const angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
-    
-        line.angle = angle;
     
         UNLE.LinesContainer.addChild(line);
     }
@@ -125,7 +121,7 @@ class UNLE {
                 UNLE.NodesContainer.getChildByName(edge[0]).y,
                 UNLE.NodesContainer.getChildByName(edge[1]).x,
                 UNLE.NodesContainer.getChildByName(edge[1]).y,
-                3,
+                2,
                 edge[2]
             )
         });
@@ -133,11 +129,11 @@ class UNLE {
     
     // get a random value between stage.width and 0
     static randomX() {
-        return Math.floor(Math.random() * UNLE.ZoomContainer.width);
+        return Math.floor(Math.random() * UNLE.app.stage.width);
     }
     
     static randomY() {
-        return Math.floor(Math.random() * UNLE.ZoomContainer.height);
+        return Math.floor(Math.random() * UNLE.app.stage.height);
     }
     
     static randomColour() {
@@ -190,11 +186,11 @@ class UNLE {
     
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
-        //nodeG.lineStyle(2, 0x303030 | colour, 1);
+        nodeG.lineStyle(1, 0xffffff, 1);
         nodeG.beginFill(colour, 1);
         nodeG.drawCircle(0, 0, rad);
         nodeG.endFill();
-    
+
         // Moved text into texture
         const annotation = new PIXI.Text(text, UNLE.textOptions);
         annotation.anchor.set(0.5);
@@ -211,14 +207,15 @@ class UNLE {
     
         node.eventMode = 'dynamic'; // Changed interactive to eventMode
         node.on('pointerdown', UNLE.onDragStart, node);
+        
         node.x = x;
         node.y = y;
         UNLE.NodesContainer.addChild(node)
     }
     
     static constrainToBounds() {
-        const width = UNLE.ZoomContainer.width;
-        const height = UNLE.ZoomContainer.height;
+        const width = UNLE.app.screen.width;
+        const height = UNLE.app.screen.height;
         // ensure all nodes are within the bounds of the canvas
         for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
             let node = UNLE.NodesContainer.children[i];
@@ -241,14 +238,14 @@ class UNLE {
         // Calculate repulsive forces between nodes
         nodes.forEach(node1 => {
             nodes.forEach(node2 => {
-            if (node1 !== node2) {
-                const delta_x = node1.x - node2.x;
-                const delta_y = node1.y - node2.y;
-                const distance = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
-                const force = (UNLE.constant * UNLE.constant) / distance;
-                node1.dx += (delta_x / distance) * force;
-                node1.dy += (delta_y / distance) * force;
-            }
+                if (node1 !== node2) {
+                    const delta_x = node1.x - node2.x;
+                    const delta_y = node1.y - node2.y;
+                    const distance = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
+                    const force = (UNLE.constant * UNLE.constant) / distance;
+                    node1.dx += (delta_x / distance) * force;
+                    node1.dy += (delta_y / distance) * force;
+                }
             })
         })
 
@@ -287,7 +284,6 @@ class UNLE {
             if (UNLE.edgesList != []) {
                 UNLE.fruchtermanReingold();
             }
-            UNLE.applyCollisions();
             UNLE.constrainToBounds();
     
             if (UNLE.shouldLock) {
@@ -306,9 +302,7 @@ class UNLE {
     //  ----------------|
 
     add_node(id = None, value = id) {
-        const width = UNLE.ZoomContainer.width;
-        const height = UNLE.ZoomContainer.height;
-        UNLE.createNode(width / 2 + UNLE.randomX() * 0.5, height / 2 + UNLE.randomX() * 0.5, 20, 0x3A3A3A, id, value)
+        UNLE.createNode(UNLE.randomX(), UNLE.randomX(), 20, UNLE.randomColour(), id, value)
         UNLE.nodesEdgeNum[id] = 0
     }
 

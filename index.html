@@ -9,13 +9,22 @@
 
             let graph = new UNLE({});
 
-            for (let i = 0; i < 500; i++) {
+            graph.add_node(0)
+            for (let i = 1; i < 10; i++) {
                 graph.add_node(i)
+                graph.add_edge(0, i ,100)
             }
 
-            for (var i = 0; i < 500 - 1; i++) {
-                graph.add_edge(i, i + 1, 100)
+            graph.add_node("Yes")
+            graph.add_edge(4, "Yes", 100)
+
+            for (let i = 10; i < 19; i++) {
+                graph.add_node(i)
+                graph.add_edge("Yes", i ,100)
             }
+
+            graph.add_edge(5, 15, 100)
+            graph.add_edge(7, 12, 100)
         </script>
     </body>
 </html>
