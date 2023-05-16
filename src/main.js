@@ -145,7 +145,7 @@ class UNLE {
                 UNLE.NodesContainer.getChildByName(edge[0]).y,
                 UNLE.NodesContainer.getChildByName(edge[1]).x,
                 UNLE.NodesContainer.getChildByName(edge[1]).y,
-                2,
+                3,
                 edge[2]
             )
         });
@@ -159,6 +159,18 @@ class UNLE {
                 2
             )
         });
+    }
+
+    static move_largest_node_to_center() {
+        let largest_node = UNLE.NodesContainer.children[0];
+        UNLE.NodesContainer.children.forEach(node => {
+            if (node.width > largest_node.width) {
+                largest_node = node;
+            }
+        });
+
+        largest_node.x = UNLE.app.stage.width / 2;
+        largest_node.y = UNLE.app.stage.height / 2;
     }
     
     // get a random value between stage.width and 0
@@ -320,6 +332,7 @@ class UNLE {
                 UNLE.applyCollisions() // This line is absolutely necessary or nodes made wipe themselves into the shadow realm if they overlap
                 UNLE.fruchtermanReingold();
             }
+            UNLE.move_largest_node_to_center() 
             UNLE.constrainToBounds();
     
             if (UNLE.shouldLock) {
