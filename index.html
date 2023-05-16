@@ -54,12 +54,12 @@
 
             let edgeLen = 200
             graph.add_node(0)
-            for (let i = 1; i < 30; i++) {
+            for (let i = 1; i < 20; i++) {
                 graph.add_node(i)
                 graph.add_edge(0, i, edgeLen)
             }
 
-            ///* Experimenting moving calculations to gpu.        Also check line 5
+            /* Experimenting moving calculations to gpu.        Also check line 5
             // GPU is a constructor and namespace for browser
             const gpu = new GPU.GPU();
             const multiplyMatrix = gpu.createKernel(function(a, b) {
@@ -73,7 +73,7 @@
             const c = multiplyMatrix([3,2], [2,5]);
 
             console.log(c)
-            //*/
+            */
             
             
         </script>
