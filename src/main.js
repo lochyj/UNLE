@@ -332,7 +332,7 @@ class UNLE {
                 UNLE.applyCollisions() // This line is absolutely necessary or nodes made wipe themselves into the shadow realm if they overlap
                 UNLE.fruchtermanReingold();
             }
-            UNLE.move_largest_node_to_center() 
+            //UNLE.move_largest_node_to_center() 
             UNLE.constrainToBounds();
     
             if (UNLE.shouldLock) {
