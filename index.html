@@ -10,31 +10,30 @@
 
             let graph = new UNLE({});
 
-            /*// Stability test
+            /* Stability test
             let edgeLen = 200
             graph.add_node(0)
             for (let i = 1; i < 1000; i++) {
                 graph.add_node(i)
                 graph.add_edge(i-1, i ,edgeLen)
-            }*/
-            
+            }
+            */
 
-            /*// Circle
-            let edgeLen = 500
+            ///* Circle
+            let edgeLen = 2000
             graph.add_node(0)
-            for (let i = 1; i < 20; i++) {
+            for (let i = 1; i < 300; i++) {
                 graph.add_node(i)
                 graph.add_edge(0, i ,edgeLen)
             }
-            */
-            
+            //*/
 
-            
+            /*
             let edgeLen = 200
             graph.add_node(0)
             for (let i = 1; i < 10; i++) {
                 graph.add_node(i)
-                graph.add_edge(0, i, edgeLen)
+                graph.add_edge(0, i ,edgeLen)
             }
 
             graph.add_node("Yes")
@@ -50,14 +49,8 @@
 
             graph.add_active_edge(5, 15)
             graph.add_active_edge(5, 0)
+            */
             
-
-            /*let edgeLen = 200
-            graph.add_node(0)
-            for (let i = 1; i < 2000; i++) {
-                graph.add_node(i)
-                graph.add_edge(0, i, edgeLen)
-            }*/
 
             /* Experimenting moving calculations to gpu.        Also check line 5
             // GPU is a constructor and namespace for browser
