@@ -25,7 +25,7 @@ class UNLE {
     static constant = 20;
 
     static shouldLock = false;
-    static locked = {x: 0, y: 0};
+    static locked = { x: 0, y: 0 };
 
     static LinesContainer;
     static NodesContainer;
@@ -38,7 +38,7 @@ class UNLE {
 
     static nodesEdgeNum = {};
 
-    constructor(data){
+    constructor(data) {
         UNLE.constrainBounds = data.constrainBounds || [];
 
         document.body.appendChild(UNLE.app.view);
@@ -47,13 +47,13 @@ class UNLE {
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
 
-        UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
+        UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, { resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR });
 
         UNLE.lineG.beginFill(0x00FF00, 1);
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
 
-        UNLE.activeLineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
+        UNLE.activeLineT = UNLE.app.renderer.generateTexture(UNLE.lineG, { resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR });
 
 
         UNLE.app.stage.eventMode = 'dynamic'; // Changed interactive to eventMode
@@ -75,13 +75,15 @@ class UNLE {
     static onDragMove(event) {
         if (!UNLE.dragTarget)
             return;
-        
+
+        //UNLE.fruchtermanReingold();
+
         UNLE.dragTarget.parent.toLocal(event.global, null, UNLE.dragTarget.position);
         UNLE.locked.x = UNLE.dragTarget.x;
         UNLE.locked.y = UNLE.dragTarget.y;
-        UNLE.drawLines();   
+        UNLE.drawLines();
     }
-    
+
     static onDragStart() {
         UNLE.dragTarget = this;
         UNLE.app.stage.on('pointermove', UNLE.onDragMove);
@@ -89,12 +91,12 @@ class UNLE {
         UNLE.locked.x = UNLE.dragTarget.x;
         UNLE.locked.y = UNLE.dragTarget.y;
     }
-    
+
     static onDragEnd() {
         if (UNLE.dragTarget) {
             UNLE.app.stage.off('pointermove', UNLE.onDragMove);
             UNLE.dragTarget = null;
-    
+
             UNLE.shouldLock = false;
         }
     }
@@ -102,22 +104,22 @@ class UNLE {
     static toDegrees(angle) {
         return angle * (180 / Math.PI);
     }
-    
+
     static toRadians(angle) {
         return angle * (Math.PI / 180);
     }
-    
+
     static drawLine(x1, y1, x2, y2, width, value) {
         const dx = x2 - x1;
         const dy = y2 - y1;
         const line = new PIXI.Sprite(UNLE.lineT);
         line.x = x2;
         line.y = y2;
-        line.height = Math.sqrt((dx*dx) + (dy*dy));
+        line.height = Math.sqrt((dx * dx) + (dy * dy));
         line.width = width;
-    
+
         line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
-    
+
         UNLE.LinesContainer.addChild(line);
     }
 
@@ -127,14 +129,14 @@ class UNLE {
         const line = new PIXI.Sprite(UNLE.activeLineT);
         line.x = x2;
         line.y = y2;
-        line.height = Math.sqrt((dx*dx) + (dy*dy));
+        line.height = Math.sqrt((dx * dx) + (dy * dy));
         line.width = width;
-    
+
         line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
-    
+
         UNLE.LinesContainer.addChild(line);
     }
-    
+
     // Implement this fully later
     static drawLines() {
         UNLE.LinesContainer.removeChildren();
@@ -160,24 +162,24 @@ class UNLE {
             )
         });
     }
-    
+
     // get a random value between stage.width and 0
     static randomX() {
         return Math.floor(Math.random() * UNLE.app.stage.width);
     }
-    
+
     static randomY() {
         return Math.floor(Math.random() * UNLE.app.stage.height);
     }
-    
+
     static randomColour() {
         return Math.floor(Math.random() * 0xFFFFFF);
     }
-    
+
     static randomRadius() {
         return Math.floor(Math.random() * 25) + 15;
     }
-    
+
     static randomEdgePower() {
         return Math.floor(Math.random() * 150) + 70;
     }
@@ -215,9 +217,9 @@ class UNLE {
             }
         }
     }
-    
+
     static createNode(xC, yC, rad, colour, id, text = id) {
-    
+
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
         nodeG.lineStyle(1, 0xffffff, 1);
@@ -228,26 +230,26 @@ class UNLE {
         // Moved text into texture
         const annotation = new PIXI.Text(text, UNLE.textOptions);
         annotation.anchor.set(0.5);
-    
-    
+
+
         const nodeContainer = new PIXI.Container();
         nodeContainer.addChild(nodeG);
         nodeContainer.addChild(annotation);
-    
+
         const nodeT = UNLE.app.renderer.generateTexture(nodeContainer);
         const node = new PIXI.Sprite(nodeT);
         node.anchor.set(0.5);
         node.name = id;
-    
+
         node.eventMode = 'dynamic'; // Changed interactive to eventMode
         node.on('pointerdown', UNLE.onDragStart, node);
 
         // Place in center of screen
-        node.x = xC + UNLE.app.renderer.width/2;
-        node.y = yC + UNLE.app.renderer.height/2;
+        node.x = xC + UNLE.app.renderer.width / 2;
+        node.y = yC + UNLE.app.renderer.height / 2;
         UNLE.NodesContainer.addChild(node)
     }
-    
+
     static constrainToBounds() {
         const width = UNLE.app.screen.width;
         const height = UNLE.app.screen.height;
@@ -258,28 +260,35 @@ class UNLE {
             node.y = Math.min(Math.max(node.y, 0), height);
         }
     }
-    
+
     static fruchtermanReingold() {
-        
+
         const nodes = UNLE.NodesContainer.children;
         const edges = UNLE.edgesList;
 
-        // Initialize forces
-        nodes.forEach(node => {
-            node.dx = 0;
-            node.dy = 0;
-        })
+        const width = UNLE.app.renderer.width;
+        const height = UNLE.app.renderer.height;
+
+        const k = Math.sqrt((width * height) / (nodes.length)); // Optimal distance between nodes
+
+        //const edgeLen = 1200
+        const edgeLen = 300
 
         // Calculate repulsive forces between nodes
         nodes.forEach(node1 => {
+            // Initialize forces
+            node1.dx = 0;
+            node1.dy = 0;
             nodes.forEach(node2 => {
                 if (node1 !== node2) {
-                    const delta_x = node1.x - node2.x;
-                    const delta_y = node1.y - node2.y;
-                    const distance = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
-                    const force = ((UNLE.constant * distance * distance) ** 0.3) / distance; // I guessed this part to be the solution to fixing the physics engine
-                    node1.dx += (delta_x / distance) * force;
-                    node1.dy += (delta_y / distance) * force;
+                    const dx = node1.x - node2.x;
+                    const dy = node1.y - node2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance > 0) {
+                        const force = k * k / distance;
+                        node1.dx += dx / distance * force;
+                        node1.dy += dy / distance * force;
+                    }
                 }
             })
         })
@@ -288,23 +297,32 @@ class UNLE {
         edges.forEach(edge => {
             const source = UNLE.NodesContainer.getChildByName(edge[0]);
             const target = UNLE.NodesContainer.getChildByName(edge[1]);
-            const delta_x = target.x - source.x;
-            const delta_y = target.y - source.y;
-            const distance = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
-            const force = (distance * distance) / (UNLE.constant * edge[2]);
-            source.dx += (delta_x / distance) * force;
-            source.dy += (delta_y / distance) * force;
-            target.dx -= (delta_x / distance) * force;
-            target.dy -= (delta_y / distance) * force;
+
+            const dx = target.x - source.x;
+            const dy = target.y - source.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance > 0) {
+                const force = distance * distance / k;
+                source.dx += dx / distance * force;
+                source.dy += dy / distance * force;
+                target.dx -= dx / distance * force;
+                target.dy -= dy / distance * force;
+            }
+
         });
 
         // Move each node
         nodes.forEach(node => {
-            //if (Math.abs(node.dx) > 0.001)
-                node.x += node.dx;
-            
-            //if (Math.abs(node.dy) > 0.001)
-                node.y += node.dy;
+            const dx = node.dx;
+            const dy = node.dy;
+
+            // Get node index
+            //const keys = Object.keys(UNLE.nodesEdgeNum)
+            //console.log(keys)
+            //console.log(UNLE.nodesEdgeNum["Yes"])
+
+            node.x += dx / (nodes.length * UNLE.nodesEdgeNum[node.name]);
+            node.y += dy / (nodes.length * UNLE.nodesEdgeNum[node.name]);
         })
     }
 
@@ -317,20 +335,20 @@ class UNLE {
         while (true) {
 
             if (UNLE.edgesList != []) {
-                UNLE.applyCollisions() // This line is absolutely necessary or nodes made wipe themselves into the shadow realm if they overlap
+                //UNLE.applyCollisions() // This line is absolutely necessary or nodes made wipe themselves into the shadow realm if they overlap
                 UNLE.fruchtermanReingold();
             }
-            UNLE.constrainToBounds();
-    
+            //UNLE.constrainToBounds();
+
             if (UNLE.shouldLock) {
                 UNLE.dragTarget.x = UNLE.locked.x;
                 UNLE.dragTarget.y = UNLE.locked.y;
             }
-    
+
             UNLE.drawLines();
             await UNLE.sleep(16);
         }
-        
+
     }
 
     //  ----------------|
@@ -342,7 +360,7 @@ class UNLE {
         UNLE.nodesEdgeNum[id] = 0
     }
 
-    nodes(){
+    nodes() {
         //console.log(UNLE.NodesContainer.getChildByName("No"))
         return UNLE.NodesContainer.children
     }
@@ -353,33 +371,33 @@ class UNLE {
         let tempedgesList = []
 
         //console.log(UNLE.NodesContainer.children)
-/*
-        // Iterate over each child in nodes container
-        for (let i = 0; i <= UNLE.NodesContainer.children.length; i++){
-            const testNode = UNLE.NodesContainer.children[i]
-            console.log(testNode)
-            //console.log("Something is happening")
-            if (node.name != testNode.name) {
-                //console.log("Please do it")
-                tempNodeContainer.addChild(testNode)
-            }
-        }
-
-        // Iterate over each child in test edge
-        for (let i = 0; i < UNLE.edgesList.length; i++){
-
-            if (!UNLE.edgesList[i].includes(node.name)) {
-                //console.log("Please do it")
-                tempedgesList.push(UNLE.edgesList[i])
-            }
-        }
-
+        /*
+                // Iterate over each child in nodes container
+                for (let i = 0; i <= UNLE.NodesContainer.children.length; i++){
+                    const testNode = UNLE.NodesContainer.children[i]
+                    console.log(testNode)
+                    //console.log("Something is happening")
+                    if (node.name != testNode.name) {
+                        //console.log("Please do it")
+                        tempNodeContainer.addChild(testNode)
+                    }
+                }
         
-        //console.log(tempContainer)
-
-        UNLE.NodesContainer = tempNodeContainer
-        UNLE.edgesList = tempedgesList
-        */
+                // Iterate over each child in test edge
+                for (let i = 0; i < UNLE.edgesList.length; i++){
+        
+                    if (!UNLE.edgesList[i].includes(node.name)) {
+                        //console.log("Please do it")
+                        tempedgesList.push(UNLE.edgesList[i])
+                    }
+                }
+        
+                
+                //console.log(tempContainer)
+        
+                UNLE.NodesContainer = tempNodeContainer
+                UNLE.edgesList = tempedgesList
+                */
     }
 
     add_edge(id1, id2, len = 100) {
