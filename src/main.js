@@ -56,13 +56,11 @@ class UNLE {
         UNLE.activeLineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
 
 
-        UNLE.app.stage.eventMode = 'dynamic'; // Changed interactive to eventMode
+        UNLE.app.stage.eventMode = 'dynamic';
 
         UNLE.app.stage.hitArea = UNLE.app.screen;
         UNLE.app.stage.on('pointerup', UNLE.onDragEnd);
         UNLE.app.stage.on('pointerupoutside', UNLE.onDragEnd);
-
-        //UNLE.app.stage.scale = {x: 0.25, y: 0.25};
 
         UNLE.LinesContainer = new PIXI.Container();
         UNLE.NodesContainer = new PIXI.Container();
@@ -271,110 +269,9 @@ class UNLE {
             node.y = Math.min(Math.max(node.y, 0), height);
         }
     }
-    
-    static kamadaKawaiAlgorithm(edgesList, nodesEdgeNum, nodesContainer) {
-        const maxIterations = 1000; // Maximum number of iterations
-        const epsilon = 0.1; // Tolerance for convergence
-        const k = 1; // Ideal edge length
-    
-        const n = nodesContainer.children.length; // Number of nodes
-        const L = UNLE.calculateDistanceMatrix(nodesContainer.children); // Calculate initial distance matrix
-    
-        // Initialize positions
-        let positions = [];
-        for (let i = 0; i < n; i++) {
-            positions[i] = { x: 0, y: 0 };
-        }
-    
-        let maxDisplacement = epsilon + 1;
-        let iterations = 0;
-    
-        // Main loop
-        while (maxDisplacement > epsilon && iterations < maxIterations) {
-            let displacement = [];
-    
-            // Calculate pairwise distances and displacements
-            for (let i = 0; i < n; i++) {
-                displacement[i] = { dx: 0, dy: 0 };
-    
-                for (let j = 0; j < n; j++) {
-                    if (i !== j) {
-                        const d = Math.max(0.01, UNLE.calculateEuclideanDistance(positions[i], positions[j]));
-                        const delta = (L[i][j] - d) / d;
-                        const dx = (positions[i].x - positions[j].x) * delta;
-                        const dy = (positions[i].y - positions[j].y) * delta;
-    
-                        displacement[i].dx += dx;
-                        displacement[i].dy += dy;
-                    }
-                }
-            }
-    
-            // Update positions
-            for (let i = 0; i < n; i++) {
-                positions[i].x += displacement[i].dx;
-                positions[i].y += displacement[i].dy;
-            }
-    
-            // Calculate maximum displacement
-            maxDisplacement = 0;
-            for (let i = 0; i < n; i++) {
-                const displacementMagnitude = UNLE.calculateEuclideanDistance({ x: 0, y: 0 }, displacement[i]);
-    
-                if (displacementMagnitude > maxDisplacement) {
-                    maxDisplacement = displacementMagnitude;
-                }
-            }
-    
-            iterations++;
-        }
-    
-        return positions;
-    }
-    
-    // Helper function to calculate the distance matrix
-    static calculateDistanceMatrix(nodes) {
-        const n = nodes.length;
-        const distanceMatrix = [];
-    
-        for (let i = 0; i < n; i++) {
-            distanceMatrix[i] = [];
-    
-            for (let j = 0; j < n; j++) {
-                distanceMatrix[i][j] = Infinity;
-            }
-    
-            distanceMatrix[i][i] = 0;
-        }
-    
-        // This means that nodeIds are integers and this is most likely not the case... try to fix this in the future.
-        for (const [nodeId1, nodeId2, edgeLength] of UNLE.edgesList) {
-            let i, j;
-            i = nodeId1 - 1;
-            j = nodeId2 - 1;
-    
-            distanceMatrix[i][j] = edgeLength;
-            distanceMatrix[j][i] = edgeLength;
-        }
-    
-        for (let k = 0; k < n; k++) {
-            for (let i = 0; i < n; i++) {
-                for (let j = 0; j < n; j++) {
-                    if (distanceMatrix[i][j] > distanceMatrix[i][k] + distanceMatrix[k][j]) {
-                        distanceMatrix[i][j] = distanceMatrix[i][k] + distanceMatrix[k][j];
-                    }
-                }
-            }
-        }
-    
-        return distanceMatrix;
-    }
-    
-    // Essentially find the distance between two points
-    static calculateEuclideanDistance(point1, point2) {
-        const dx = point2.x - point1.x;
-        const dy = point2.y - point1.y;
-        return Math.sqrt(dx * dx + dy * dy);
+
+    static KamadaKawai() {
+        
     }
 
     static sleep(ms) {
@@ -387,12 +284,9 @@ class UNLE {
 
             if (UNLE.edgesList != []) {
                 UNLE.applyCollisions() // This line is absolutely necessary or nodes made wipe themselves into the shadow realm if they overlap
-                const positions = UNLE.kamadaKawaiAlgorithm(UNLE.edgesList, UNLE.nodesEdgeNum, UNLE.NodesContainer);
-                console.log(positions)
-                for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
-                    UNLE.NodesContainer.children[i].x = positions[i].x;
-                    UNLE.NodesContainer.children[i].y = positions[i].y;
-                }
+            
+                UNLE.KamadaKawai()
+                
             }
             //UNLE.move_largest_node_to_center() 
             UNLE.constrainToBounds();
@@ -426,35 +320,6 @@ class UNLE {
         //console.log(node.name)
         let tempNodeContainer = new PIXI.Container()
         let tempedgesList = []
-
-        //console.log(UNLE.NodesContainer.children)
-/*
-        // Iterate over each child in nodes container
-        for (let i = 0; i <= UNLE.NodesContainer.children.length; i++){
-            const testNode = UNLE.NodesContainer.children[i]
-            console.log(testNode)
-            //console.log("Something is happening")
-            if (node.name != testNode.name) {
-                //console.log("Please do it")
-                tempNodeContainer.addChild(testNode)
-            }
-        }
-
-        // Iterate over each child in test edge
-        for (let i = 0; i < UNLE.edgesList.length; i++){
-
-            if (!UNLE.edgesList[i].includes(node.name)) {
-                //console.log("Please do it")
-                tempedgesList.push(UNLE.edgesList[i])
-            }
-        }
-
-        
-        //console.log(tempContainer)
-
-        UNLE.NodesContainer = tempNodeContainer
-        UNLE.edgesList = tempedgesList
-        */
     }
 
     add_edge(id1, id2, len = 100) {
@@ -473,26 +338,6 @@ class UNLE {
         }
     }
 
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default UNLE;
