@@ -10,7 +10,7 @@
 
             let graph = new UNLE({});
 
-            /* Stability test
+            /*// Stability test
             let edgeLen = 200
             graph.add_node(0)
             for (let i = 1; i < 1000; i++) {
@@ -19,17 +19,17 @@
             }
             */
 
-            ///* Circle
+            /* Circle
             let edgeLen = 2000
             graph.add_node(0)
             for (let i = 1; i < 300; i++) {
                 graph.add_node(i)
                 graph.add_edge(0, i ,edgeLen)
             }
-            //*/
+            */
 
-            /*
-            let edgeLen = 200
+            
+            let edgeLen = 100
             graph.add_node(0)
             for (let i = 1; i < 10; i++) {
                 graph.add_node(i)
@@ -49,8 +49,20 @@
 
             graph.add_active_edge(5, 15)
             graph.add_active_edge(5, 0)
-            */
             
+            function add_edge() {
+                let edge = document.getElementById("edges").value.split(" ")
+                console.log(edge)
+                
+                graph.add_edge(edge[0], edge[1])
+            }
+
+            function add_node() {
+                graph.add_node(graph.nodes().length + 1)
+            }
+
+            document.getElementById("edge").addEventListener("click", add_edge)
+            document.getElementById("node").addEventListener("click", add_node)
 
             /* Experimenting moving calculations to gpu.        Also check line 5
             // GPU is a constructor and namespace for browser
@@ -70,5 +82,8 @@
             
             
         </script>
+        <input type="text" id="edges">
+        <button id="edge">edge</button>
+        <button id="node">node</button>
     </body>
 </html>

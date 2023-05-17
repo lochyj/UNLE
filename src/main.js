@@ -38,6 +38,8 @@ class UNLE {
 
     static nodesEdgeNum = {};
 
+    static edgeLengthDiv = 3;
+
     constructor(data) {
         UNLE.constrainBounds = data.constrainBounds || [];
 
@@ -55,7 +57,6 @@ class UNLE {
 
         UNLE.activeLineT = UNLE.app.renderer.generateTexture(UNLE.lineG, { resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR });
 
-
         UNLE.app.stage.eventMode = 'dynamic'; // Changed interactive to eventMode
 
         UNLE.app.stage.hitArea = UNLE.app.screen;
@@ -63,11 +64,18 @@ class UNLE {
         UNLE.app.stage.on('pointerupoutside', UNLE.onDragEnd);
 
 
+
+        UNLE.Test = new PIXI.Container();
         UNLE.LinesContainer = new PIXI.Container();
         UNLE.NodesContainer = new PIXI.Container();
 
-        UNLE.app.stage.addChild(UNLE.LinesContainer);
-        UNLE.app.stage.addChild(UNLE.NodesContainer);
+        //UNLE.app.stage.addChild(UNLE.LinesContainer);
+        UNLE.Test.addChild(UNLE.LinesContainer);
+        UNLE.Test.addChild(UNLE.NodesContainer);
+
+        UNLE.Test.scale = {x: 0.75, y: 0.75}
+
+        UNLE.app.stage.addChild(UNLE.Test);
 
         UNLE.main();
     }
@@ -269,10 +277,9 @@ class UNLE {
         const width = UNLE.app.renderer.width;
         const height = UNLE.app.renderer.height;
 
-        const k = Math.sqrt((width * height) / (nodes.length)); // Optimal distance between nodes
+        const k = Math.sqrt(((width * height)/160)); // Optimal distance between nodes
 
-        //const edgeLen = 1200
-        const edgeLen = 300
+        const accel = 2 // Speeds up or slows down movement animation
 
         // Calculate repulsive forces between nodes
         nodes.forEach(node1 => {
@@ -313,17 +320,16 @@ class UNLE {
 
         // Move each node
         nodes.forEach(node => {
-            const dx = node.dx;
-            const dy = node.dy;
-
-            // Get node index
-            //const keys = Object.keys(UNLE.nodesEdgeNum)
-            //console.log(keys)
-            //console.log(UNLE.nodesEdgeNum["Yes"])
-
-            node.x += dx / (nodes.length * UNLE.nodesEdgeNum[node.name]);
-            node.y += dy / (nodes.length * UNLE.nodesEdgeNum[node.name]);
+            node.x += accel * (node.dx / (nodes.length * UNLE.nodesEdgeNum[node.name]));
+            node.y += accel * (node.dy / (nodes.length * UNLE.nodesEdgeNum[node.name]));
+            // TODO: fix the constraints
+            //node.x = Math.min(Math.max(node.x, 0), width);
+            //node.y = Math.min(Math.max(node.y, 0), height);
         })
+    }
+
+    static cool(t) {
+        return t - 0.1;
     }
 
     static sleep(ms) {
@@ -369,35 +375,6 @@ class UNLE {
         //console.log(node.name)
         let tempNodeContainer = new PIXI.Container()
         let tempedgesList = []
-
-        //console.log(UNLE.NodesContainer.children)
-        /*
-                // Iterate over each child in nodes container
-                for (let i = 0; i <= UNLE.NodesContainer.children.length; i++){
-                    const testNode = UNLE.NodesContainer.children[i]
-                    console.log(testNode)
-                    //console.log("Something is happening")
-                    if (node.name != testNode.name) {
-                        //console.log("Please do it")
-                        tempNodeContainer.addChild(testNode)
-                    }
-                }
-        
-                // Iterate over each child in test edge
-                for (let i = 0; i < UNLE.edgesList.length; i++){
-        
-                    if (!UNLE.edgesList[i].includes(node.name)) {
-                        //console.log("Please do it")
-                        tempedgesList.push(UNLE.edgesList[i])
-                    }
-                }
-        
-                
-                //console.log(tempContainer)
-        
-                UNLE.NodesContainer = tempNodeContainer
-                UNLE.edgesList = tempedgesList
-                */
     }
 
     add_edge(id1, id2, len = 100) {
@@ -416,26 +393,6 @@ class UNLE {
         }
     }
 
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default UNLE;
