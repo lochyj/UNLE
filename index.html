@@ -5,10 +5,11 @@
         <script src="src/gpu-browser.js"></script> <!--Min file does not load-->
     </head>
     <body>
+        <div id="canvas"></div>
         <script type="module">
             import UNLE from './src/main.js'
 
-            let graph = new UNLE({});
+            let graph = new UNLE(document.getElementById("canvas"));
 
             /*// Stability test
             let edgeLen = 200
@@ -47,23 +48,6 @@
             graph.add_edge(5, 15, edgeLen)
             graph.add_edge(7, 12, edgeLen)
 
-            graph.add_active_edge(5, 15)
-            graph.add_active_edge(5, 0)
-            
-            function add_edge() {
-                let edge = document.getElementById("edges").value.split(" ")
-                console.log(edge)
-                
-                graph.add_edge(edge[0], edge[1])
-            }
-
-            function add_node() {
-                graph.add_node(graph.nodes().length + 1)
-            }
-
-            document.getElementById("edge").addEventListener("click", add_edge)
-            document.getElementById("node").addEventListener("click", add_node)
-
             /* Experimenting moving calculations to gpu.        Also check line 5
             // GPU is a constructor and namespace for browser
             const gpu = new GPU.GPU();
@@ -82,8 +66,5 @@
             
             
         </script>
-        <input type="text" id="edges">
-        <button id="edge">edge</button>
-        <button id="node">node</button>
     </body>
 </html>

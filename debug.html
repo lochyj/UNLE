@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="src/gpu-browser.js"></script> <!--Min file does not load-->
+    </head>
+    <body>
+        <div style="display: inline-flex;">
+            <div id="canvas"></div>
+            <div id="debug"></div>
+        </div>
+        
+        <script type="module">
+            import UNLE from './src/main.js'
+
+            let graph = new UNLE(document.getElementById("canvas"), document.getElementById("debug"));
+            
+            let edgeLen = 100
+            graph.add_node(0)
+            for (let i = 1; i < 10; i++) {
+                graph.add_node(i)
+                graph.add_edge(0, i ,edgeLen)
+            }
+
+            graph.add_node("Yes")
+            graph.add_edge(4, "Yes", edgeLen)
+
+            for (let i = 10; i < 19; i++) {
+                graph.add_node(i)
+                graph.add_edge("Yes", i ,edgeLen)
+            }
+
+            graph.add_edge(5, 15, edgeLen)
+            graph.add_edge(7, 12, edgeLen)
+            
+        </script>
+    </body>
+</html>
