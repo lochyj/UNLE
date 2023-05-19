@@ -234,6 +234,7 @@ class UNLE {
         return Math.floor(Math.random() * 0xFFFFFF);
     }
 
+    //TODO: experiment with not using sprite for higher quality
     static createNode(xC, yC, rad, colour, id, text = id) {
 
         // Replaced graphics with sprite for faster rendering
@@ -246,7 +247,6 @@ class UNLE {
         // Moved text into texture
         const annotation = new PIXI.Text(text, UNLE.textOptions);
         annotation.anchor.set(0.5);
-
 
         const nodeContainer = new PIXI.Container();
         nodeContainer.addChild(nodeG);
@@ -266,28 +266,19 @@ class UNLE {
         UNLE.NodesContainer.addChild(node);
     }
 
-    static constrainToBounds() {
-        const width = UNLE.app.screen.width;
-        const height = UNLE.app.screen.height;
-        // ensure all nodes are within the bounds of the canvas
-        for (let i = 0; i < UNLE.NodesContainer.children.length; i++) {
-            let node = UNLE.NodesContainer.children[i];
-            node.x = Math.min(Math.max(node.x, 0), width);
-            node.y = Math.min(Math.max(node.y, 0), height);
-        }
-    }
-
     static fruchtermanReingold() {
-
         const nodes = UNLE.NodesContainer.children;
         const edges = UNLE.edgesList;
 
+        //TODO: Move this to a global variable that is updated every now and then
         const width = UNLE.app.renderer.width;
         const height = UNLE.app.renderer.height;
+        //
 
-        const k = Math.sqrt(((width * height)/160)); // Optimal distance between nodes
+        const k = Math.sqrt(((width * height) / 160)); // Optimal distance between nodes
 
-        const accel = 2 // Speeds up or slows down movement animation
+        // Leave this at 2 for the moment. This is the optimal speed...
+        const accel = 2
 
         // Calculate repulsive forces between nodes
         nodes.forEach(node1 => {
@@ -299,11 +290,11 @@ class UNLE {
                     const dx = node1.x - node2.x;
                     const dy = node1.y - node2.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance > 0) {
-                        const force = k * k / distance;
-                        node1.dx += dx / distance * force;
-                        node1.dy += dy / distance * force;
-                    }
+                    if (distance <= 0)
+                        return;
+                    const force = k * k / distance;
+                    node1.dx += dx / distance * force;
+                    node1.dy += dy / distance * force;
                 }
             })
         })
@@ -316,20 +307,24 @@ class UNLE {
             const dx = target.x - source.x;
             const dy = target.y - source.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance > 0) {
-                const force = distance * distance / k;
-                source.dx += dx / distance * force;
-                source.dy += dy / distance * force;
-                target.dx -= dx / distance * force;
-                target.dy -= dy / distance * force;
-            }
+            if (distance <= 0)
+                return;
+            const force = distance * distance / k;
+            const x = dx / distance * force;
+            const y = dy / distance * force;
+            source.dx += x;
+            source.dy += y;
+            target.dx -= x;
+            target.dy -= y;
 
         });
 
         // Move each node
         nodes.forEach(node => {
-            node.x += accel * (node.dx / (nodes.length * UNLE.nodesEdgeNum[node.name]));
-            node.y += accel * (node.dy / (nodes.length * UNLE.nodesEdgeNum[node.name]));
+            // TODO: rename this to something more cohesive...
+            const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
+            node.x += accel * (node.dx / EdgeLength);
+            node.y += accel * (node.dy / EdgeLength);
             // TODO: fix the constraints
             //node.x = Math.min(Math.max(node.x, 0), width);
             //node.y = Math.min(Math.max(node.y, 0), height);
@@ -349,33 +344,34 @@ class UNLE {
     }
 
     static async main() {
-        //while (true) {
-            // This might slow us down even when we don't need to debug...
-            UNLE.DisplayDebug();
-            // -
+        // This might slow us down even when we don't need to debug...
+        UNLE.DisplayDebug();
+        // -
 
-            if (UNLE.edgesList != []) {
-                UNLE.LayoutAlgorithm();
-            }
-            //UNLE.constrainToBounds();
+        if (UNLE.edgesList != []) {
+            UNLE.LayoutAlgorithm();
+        }
 
-            if (UNLE.dragTarget != null) {
-                UNLE.dragTarget.x = UNLE.locked.x;
-                UNLE.dragTarget.y = UNLE.locked.y;
-            }
+        if (UNLE.dragTarget != null) {
+            UNLE.dragTarget.x = UNLE.locked.x;
+            UNLE.dragTarget.y = UNLE.locked.y;
+        }
 
-            UNLE.drawLines();
-            await UNLE.sleep(UNLE.simulationSpeed);
-        //}
+        UNLE.drawLines();
+
+        // TODO: remove this...
+        await UNLE.sleep(UNLE.simulationSpeed);
+        //
+
         requestAnimationFrame(UNLE.main);
     }
 
-    //  ----------------|
-    //  Public Functions|
-    //  ----------------|
+    // |-------------------------|
+    // | Public Facing Functions |
+    // |-------------------------|
 
     add_node(id = None, value = id) {
-        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), 20, UNLE.randomColour(), id, value)
+        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), 20, 0x808080 /*UNLE.randomColour()*/, id, value)
         UNLE.nodesEdgeNum[id] = 0
     }
 
@@ -400,7 +396,6 @@ class UNLE {
         UNLE.nodesEdgeNum[id1] += 1
         UNLE.nodesEdgeNum[id2] += 1
     }
-
 }
 
 export default UNLE;
