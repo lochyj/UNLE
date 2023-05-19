@@ -35,9 +35,6 @@ class UNLE {
 
     static edgeLengthDiv = 3;
 
-    // TODO: this has been made redundant by requestAnimationFrame...
-    static simulationSpeed = 0;
-
     constructor(DomElement, DebugDiv) {
         DomElement.appendChild(UNLE.app.view);
 
@@ -100,20 +97,6 @@ class UNLE {
         EdgesDetails.appendChild(EdgeTitle);
         const EdgesInfo = document.createElement('div');
         EdgesDetails.appendChild(EdgesInfo);
-
-        const SimulationSpeed = document.createElement('input');
-        const SimulationSpeedLabel = document.createElement('p');
-        SimulationSpeed.type = 'range';
-        SimulationSpeed.min = 1;
-        SimulationSpeed.max = 100;
-        SimulationSpeed.value = 16;
-        SimulationSpeedLabel.innerText = "Speed: 16";
-        SimulationSpeed.oninput = (e) => {
-            UNLE.simulationSpeed = e.target.value;
-            SimulationSpeedLabel.innerText = `Speed: ${e.target.value}`;
-        }
-        debugDiv.appendChild(SimulationSpeed);
-        debugDiv.appendChild(SimulationSpeedLabel);
 
         debugDiv.appendChild(NodesDetails);
         debugDiv.appendChild(EdgesDetails);
@@ -358,10 +341,6 @@ class UNLE {
         }
 
         UNLE.drawLines();
-
-        // TODO: remove this...
-        await UNLE.sleep(UNLE.simulationSpeed);
-        //
 
         requestAnimationFrame(UNLE.main);
     }
