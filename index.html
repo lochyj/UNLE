@@ -10,25 +10,6 @@
             import UNLE from './src/main.js'
 
             let graph = new UNLE(document.getElementById("canvas"));
-
-            /*// Stability test
-            let edgeLen = 200
-            graph.add_node(0)
-            for (let i = 1; i < 1000; i++) {
-                graph.add_node(i)
-                graph.add_edge(i-1, i ,edgeLen)
-            }
-            */
-
-            /* Circle
-            let edgeLen = 2000
-            graph.add_node(0)
-            for (let i = 1; i < 300; i++) {
-                graph.add_node(i)
-                graph.add_edge(0, i ,edgeLen)
-            }
-            */
-
             
             let edgeLen = 100
             graph.add_node(0)
@@ -48,23 +29,6 @@
             graph.add_edge(5, 15, edgeLen)
             graph.add_edge(7, 12, edgeLen)
 
-            /* Experimenting moving calculations to gpu.        Also check line 5
-            // GPU is a constructor and namespace for browser
-            const gpu = new GPU.GPU();
-            const multiplyMatrix = gpu.createKernel(function(a, b) {
-                let sum = 0;
-                for (let i = 0; i < 512; i++) {
-                    sum += a[this.thread.y][i] * b[i][this.thread.x];
-                }
-                return sum;
-            }).setOutput([512, 512]);
-
-            const c = multiplyMatrix([3,2], [2,5]);
-
-            console.log(c)
-            */
-            
-            
         </script>
     </body>
 </html>

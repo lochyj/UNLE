@@ -35,7 +35,8 @@ class UNLE {
 
     static edgeLengthDiv = 3;
 
-    static simulationSpeed = 16;
+    // TODO: this has been made redundant by requestAnimationFrame...
+    static simulationSpeed = 0;
 
     constructor(DomElement, DebugDiv) {
         DomElement.appendChild(UNLE.app.view);
@@ -46,20 +47,20 @@ class UNLE {
             UNLE.initDebug();
         }
 
-
         UNLE.LayoutAlgorithm = UNLE.fruchtermanReingold;
 
+        UNLE.init();
+
+        // Main loop
+        UNLE.main();
+    }
+
+    static init() {
         UNLE.lineG.beginFill(0xFFFFFF, 1);
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
 
         UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, { resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR });
-
-        UNLE.lineG.beginFill(0x00FF00, 1);
-        UNLE.lineG.drawRect(0, 0, 1, 1);
-        UNLE.lineG.endFill();
-
-        UNLE.activeLineT = UNLE.app.renderer.generateTexture(UNLE.lineG, { resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR });
 
         UNLE.app.stage.eventMode = 'dynamic';
 
@@ -77,10 +78,9 @@ class UNLE {
         UNLE.Container.scale = {x: 0.75, y: 0.75}
 
         UNLE.app.stage.addChild(UNLE.Container);
-
-        UNLE.main();
     }
 
+    // Empty function to override in the constructor if needed that gets called within the main loop
     static DisplayDebug(){}
 
     static initDebug() {
@@ -125,14 +125,15 @@ class UNLE {
     static debug() {
         
         UNLE.NodesInfo.innerHTML = '';
+        UNLE.EdgesInfo.innerHTML = '';
+
         UNLE.NodesContainer.children.forEach(node => {
             const nodeInfo = document.createElement('div');
-            nodeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px;';
+            nodeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px; border-radius: 5px;';
             nodeInfo.innerHTML = `Node ${node.name} <br> x: ${node.x} <br> y: ${node.y} <br> edges: ${UNLE.nodesEdgeNum[node.name]}`;
             UNLE.NodesInfo.appendChild(nodeInfo);
         });
         
-        UNLE.EdgesInfo.innerHTML = '';
         UNLE.edgesList.forEach(edge => {
             const edgeInfo = document.createElement('div');
             edgeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px;';
@@ -146,15 +147,19 @@ class UNLE {
             return;
 
         UNLE.dragTarget.parent.toLocal(event.global, null, UNLE.dragTarget.position);
+        
+        // Lock the dragged node to the cursor / finger
         UNLE.locked.x = UNLE.dragTarget.x;
         UNLE.locked.y = UNLE.dragTarget.y;
+
         UNLE.drawLines();
     }
 
     static onDragStart() {
         UNLE.dragTarget = this;
         UNLE.app.stage.on('pointermove', UNLE.onDragMove);
-        UNLE.shouldLock = true;
+
+        // Lock the dragged node to the cursor / finger
         UNLE.locked.x = UNLE.dragTarget.x;
         UNLE.locked.y = UNLE.dragTarget.y;
     }
@@ -163,8 +168,6 @@ class UNLE {
         if (UNLE.dragTarget) {
             UNLE.app.stage.off('pointermove', UNLE.onDragMove);
             UNLE.dragTarget = null;
-
-            UNLE.shouldLock = false;
         }
     }
 
@@ -347,9 +350,7 @@ class UNLE {
     }
 
     static async main() {
-
-        // We should look into using requestAnimationFrame because it scales the framerate
-        while (true) {
+        //while (true) {
             // This might slow us down even when we don't need to debug...
             UNLE.DisplayDebug();
             // -
@@ -359,15 +360,15 @@ class UNLE {
             }
             //UNLE.constrainToBounds();
 
-            if (UNLE.shouldLock) {
+            if (UNLE.dragTarget != null) {
                 UNLE.dragTarget.x = UNLE.locked.x;
                 UNLE.dragTarget.y = UNLE.locked.y;
             }
 
             UNLE.drawLines();
             await UNLE.sleep(UNLE.simulationSpeed);
-        }
-
+        //}
+        requestAnimationFrame(UNLE.main);
     }
 
     //  ----------------|
