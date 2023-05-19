@@ -90,7 +90,7 @@ class UNLE {
         const NodeTitle = document.createElement('summary');
         NodeTitle.innerText = 'Nodes'
         NodesDetails.appendChild(NodeTitle);
-        //NodesDetails.appendChild(document.createElement('summary').innerText = 'Nodes');
+
         const NodesInfo = document.createElement('div');
         NodesDetails.appendChild(NodesInfo);
 
@@ -123,7 +123,6 @@ class UNLE {
     }
 
     static debug() {
-        
         UNLE.NodesInfo.innerHTML = '';
         UNLE.EdgesInfo.innerHTML = '';
 
@@ -136,7 +135,7 @@ class UNLE {
         
         UNLE.edgesList.forEach(edge => {
             const edgeInfo = document.createElement('div');
-            edgeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px;';
+            edgeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px; border-radius: 5px;';
             edgeInfo.innerHTML = `Edge ${edge[0]} -> ${edge[1]} <br> length: ${edge[2]}`;
             UNLE.EdgesInfo.appendChild(edgeInfo);
         });
@@ -381,14 +380,19 @@ class UNLE {
     }
 
     nodes() {
-        //console.log(UNLE.NodesContainer.getChildByName("No"))
         return UNLE.NodesContainer.children
     }
 
-    remove_node(node) {
-        //console.log(node.name)
-        let tempNodeContainer = new PIXI.Container()
-        let tempedgesList = []
+    remove_node(nodeID) {
+        const Node = UNLE.NodesContainer.getChildByName(nodeID);
+
+        const edgesConnectedToNode = UNLE.edgesList.filter(edge => edge[0] === Node.name || edge[1] === Node.name);
+
+        edgesConnectedToNode.forEach(edge => {
+            UNLE.edgesList.splice(UNLE.edgesList.indexOf(edge), 1);
+        });
+
+        UNLE.NodesContainer.removeChild(Node);
     }
 
     add_edge(id1, id2, len = 100) {
