@@ -14,24 +14,23 @@
 
             let graph = new UNLE(document.getElementById("canvas"), document.getElementById("debug"));
             
-            let edgeLen = 100
-            graph.add_node(0)
+            let edgeLen = 100;
+            graph.add_node(0);
             for (let i = 1; i < 10; i++) {
-                graph.add_node(i)
-                graph.add_edge(0, i ,edgeLen)
+                graph.add_node(i);
+                graph.add_edge(0, i ,edgeLen);
             }
 
-            graph.add_node("Yes")
-            graph.add_edge(4, "Yes", edgeLen)
+            graph.add_node("Yes");
+            graph.add_edge(4, "Yes", edgeLen);
 
             for (let i = 10; i < 19; i++) {
-                graph.add_node(i)
-                graph.add_edge("Yes", i ,edgeLen)
+                graph.add_node(i);
+                graph.add_edge("Yes", i ,edgeLen);
             }
 
-            graph.add_edge(5, 15, edgeLen)
-            graph.add_edge(7, 12, edgeLen)
-            
+            graph.add_edge(5, 15, edgeLen);
+            graph.add_edge(7, 12, edgeLen);
         </script>
     </body>
 </html>
