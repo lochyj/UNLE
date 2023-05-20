@@ -44,6 +44,8 @@ class UNLE {
 
         UNLE.canvas = data.canvas;
 
+        UNLE.pivot = NaN;
+
         if (data.debug) {
             UNLE.DebugDiv = data.debug;
             UNLE.DisplayDebug = UNLE.debug;
@@ -64,7 +66,7 @@ class UNLE {
     }
 
     static init() {
-        UNLE.lineG.beginFill(0xFFFFFF, 1);
+        UNLE.lineG.beginFill(0xFFFFFF);
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
 
@@ -124,6 +126,8 @@ class UNLE {
         UNLE.app.view.addEventListener("mouseup", (event) => {
             if (event.button === 1) {
                 UNLE.shouldLock = false;
+                UNLE.Container.pivot.x = UNLE.xC;
+                UNLE.Container.pivot.y = UNLE.yC;
             }
         });
 
