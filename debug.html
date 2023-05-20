@@ -12,7 +12,10 @@
         <script type="module">
             import UNLE from './src/main.js'
 
-            let graph = new UNLE(document.getElementById("canvas"), document.getElementById("debug"));
+            let graph = new UNLE({
+                "canvas": document.getElementById("canvas"),
+                "debug": document.getElementById("debug")
+            });
             
             let edgeLen = 100;
             graph.add_node(0);

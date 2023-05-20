@@ -35,14 +35,25 @@ class UNLE {
 
     static edgeLengthDiv = 3;
 
-    constructor(DomElement, DebugDiv) {
-        DomElement.appendChild(UNLE.app.view);
+    constructor(data) {
+        data.canvas.appendChild(UNLE.app.view);
 
-        if (DebugDiv) {
-            UNLE.DebugDiv = DebugDiv;
+        // get the coordinates of the centre of the screen
+        UNLE.xC = UNLE.app.renderer.width / 2;
+        UNLE.yC = UNLE.app.renderer.height / 2;
+
+        UNLE.canvas = data.canvas;
+
+        if (data.debug) {
+            UNLE.DebugDiv = data.debug;
             UNLE.DisplayDebug = UNLE.debug;
             UNLE.initDebug();
         }
+
+        if (data.show_id != null) UNLE.showID = data.show_id; else UNLE.showID = true;
+        if (data.node_radius != null) UNLE.nodeRadius = data.node_radius; else UNLE.nodeRadius = 20;
+        if (data.node_color != null) UNLE.nodeColor = data.node_color; else UNLE.nodeColor = 0x808080;
+        if (data.edge_length != null) UNLE.edgeLength = data.edge_length / 10; else UNLE.edgeLength = 100 / 10;
 
         UNLE.LayoutAlgorithm = UNLE.fruchtermanReingold;
 
@@ -75,10 +86,68 @@ class UNLE {
         UNLE.Container.scale = {x: 0.75, y: 0.75}
 
         UNLE.app.stage.addChild(UNLE.Container);
+
+        UNLE.client = {
+            "cursor": {
+                "x": 0, "y": 0
+            }
+        };
+
+        UNLE.app.view.addEventListener("wheel", (event) => {
+            if (event.deltaY < 0) {
+                UNLE.zoom(1);
+            } else if (event.deltaY > 0) {
+                UNLE.zoom(-1);
+            } else {
+                return;
+            }
+        });
+
+        UNLE.app.view.addEventListener("touchmove", (event) => {
+            UNLE.client.cursor.x = event.touches[0].clientX;
+            UNLE.client.cursor.y = event.touches[0].clientY;
+        });
+
+        UNLE.app.view.addEventListener("mousemove", (event) => {
+            UNLE.client.cursor.x = event.clientX;
+            UNLE.client.cursor.y = event.clientY;
+        });
+
+        // Get middle click down
+        UNLE.app.view.addEventListener("mousedown", (event) => {
+            if (event.button === 1) {
+                UNLE.shouldLock = true;
+            }
+        });
+
+        // Get middle click up
+        UNLE.app.view.addEventListener("mouseup", (event) => {
+            if (event.button === 1) {
+                UNLE.shouldLock = false;
+            }
+        });
+
     }
 
     // Empty function to override in the constructor if needed that gets called within the main loop
     static DisplayDebug(){}
+
+    //! INFO: If you zoom out too far the graph inverts...
+    static zoom(direction) {
+        
+        // get the position of the mouse
+        //const mousePosition = UNLE.app.renderer.plugins.interaction.mouse.global;
+
+        // convert the mouse position to world space
+        //const point = UNLE.app.stage.toLocal(mousePosition);
+
+        // Get cursor position
+        UNLE.Container.scale.x += direction * 0.05;
+        UNLE.Container.scale.y += direction * 0.05;
+
+        UNLE.Container.pivot.x = UNLE.client.cursor.x;
+        UNLE.Container.pivot.y = UNLE.client.cursor.y;
+    }
 
     static initDebug() {
         const debugDiv = UNLE.DebugDiv;
@@ -218,22 +287,23 @@ class UNLE {
     }
 
     //TODO: experiment with not using sprite for higher quality
-    static createNode(xC, yC, rad, colour, id, text = id) {
+    static createNode(xC, yC, id, text = id) {
 
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
         nodeG.lineStyle(1, 0xffffff, 1);
-        nodeG.beginFill(colour, 1);
-        nodeG.drawCircle(0, 0, rad);
+        nodeG.beginFill(UNLE.nodeColor, 1);
+        nodeG.drawCircle(0, 0, UNLE.nodeRadius);
         nodeG.endFill();
-
-        // Moved text into texture
-        const annotation = new PIXI.Text(text, UNLE.textOptions);
-        annotation.anchor.set(0.5);
 
         const nodeContainer = new PIXI.Container();
         nodeContainer.addChild(nodeG);
-        nodeContainer.addChild(annotation);
+
+        if (UNLE.showID) {
+            const annotation = new PIXI.Text(text, UNLE.textOptions);
+            annotation.anchor.set(0.5);
+            nodeContainer.addChild(annotation);
+        }
 
         const nodeT = UNLE.app.renderer.generateTexture(nodeContainer);
         const node = new PIXI.Sprite(nodeT);
@@ -258,6 +328,7 @@ class UNLE {
         const height = UNLE.app.renderer.height;
         //
 
+        //TODO: add UNLE.edgeLength
         const k = Math.sqrt(((width * height) / 160)); // Optimal distance between nodes
 
         // Leave this at 2 for the moment. This is the optimal speed...
@@ -331,6 +402,8 @@ class UNLE {
         UNLE.DisplayDebug();
         // -
 
+        //console.log(window.scrollX)
+
         if (UNLE.edgesList != []) {
             UNLE.LayoutAlgorithm();
         }
@@ -338,6 +411,14 @@ class UNLE {
         if (UNLE.dragTarget != null) {
             UNLE.dragTarget.x = UNLE.locked.x;
             UNLE.dragTarget.y = UNLE.locked.y;
+        }
+
+        if (UNLE.shouldLock) {
+            // get centre of screen
+
+
+            UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.app.renderer.width / 2;
+            UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.app.renderer.height / 2;
         }
 
         UNLE.drawLines();
@@ -350,7 +431,7 @@ class UNLE {
     // |-------------------------|
 
     add_node(id = None, value = id) {
-        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), 20, 0x808080 /*UNLE.randomColour()*/, id, value)
+        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), id, value)
         UNLE.nodesEdgeNum[id] = 0
     }
 

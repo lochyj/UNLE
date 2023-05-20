@@ -8,7 +8,19 @@
         <script type="module">
             import UNLE from './src/main.js'
 
-            let graph = new UNLE(document.getElementById("canvas"));
+            // "canvas" << required,
+            // "show_id" -> either true or false,
+            // "node_radius" -> any positive integer,
+            // "node_color" -> any HEX colour expressed such as 0x000000 for example,
+            // "edge_length" -> any positive integer
+
+            let graph = new UNLE({
+                "canvas": document.getElementById("canvas"),
+                "show_id": true,
+                "node_radius": 20,
+                "node_color": 0xFFF,
+                "edge_length": 100
+            });
             
             let edgeLen = 100;
             graph.add_node(0);
@@ -36,6 +48,21 @@
             graph.remove_node("removed!");
 
             graph.remove_edge(17, 13)
+
+            // randomly generate a graph with 100 nodes and 200 edges
+
+            /*let nodes = 500;
+            let edges = 2000;
+
+            for (let i = 0; i < nodes; i++) {
+                graph.add_node(i);
+            }
+
+            for (let i = 0; i < edges; i++) {
+                let a = Math.floor(Math.random() * nodes);
+                let b = Math.floor(Math.random() * nodes);
+                graph.add_edge(a, b);
+            }*/
 
         </script>
     </body>

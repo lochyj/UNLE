@@ -26,7 +26,16 @@ import UNLE from 'unle';
 Creating a new UNLE instance:
 
 ```js
-const graph = new UNLE(document.getElementById("<div where you want UNLE to place the canvas>"));
+// Options are:
+// "canvas" << required,
+// "show_id" -> either true or false,
+// "node_radius" -> any positive integer,
+// "node_color" -> any HEX colour expressed such as 0x000000 for example,
+// "edge_length" -> any positive integer
+let graph = new UNLE({
+    "canvas": document.getElementById("<div where you want UNLE to place the canvas>"),
+    "node_color": 0xA0A0A0,
+});
 ```
 
 Adding nodes to the graph:
