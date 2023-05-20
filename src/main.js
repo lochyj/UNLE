@@ -354,6 +354,13 @@ class UNLE {
         UNLE.nodesEdgeNum[id] = 0
     }
 
+    add_edge(nodeID1, nodeID2, length = 100) {
+        UNLE.edgesList.push([nodeID1, nodeID2, length])
+        UNLE.nodesEdgeNum[nodeID1] += 1
+        UNLE.nodesEdgeNum[nodeID2] += 1
+    }
+
+    //TODO: make this more user friendly...
     nodes() {
         return UNLE.NodesContainer.children
     }
@@ -370,10 +377,20 @@ class UNLE {
         UNLE.NodesContainer.removeChild(Node);
     }
 
-    add_edge(id1, id2, len = 100) {
-        UNLE.edgesList.push([id1, id2, len])
-        UNLE.nodesEdgeNum[id1] += 1
-        UNLE.nodesEdgeNum[id2] += 1
+    remove_edge(node1, node2) {
+        if (UNLE.edgesList.findIndex(edge => edge[0] === node1 && edge[1] === node2) !== -1)
+            UNLE.edgesList.splice(UNLE.edgesList.findIndex(edge => edge[0] === node1 && edge[1] === node2), 1);
+        else if (UNLE.edgesList.findIndex(edge => edge[1] === node1 && edge[0] === node2) !== -1)
+            UNLE.edgesList.splice(UNLE.edgesList.findIndex(edge => edge[1] === node1 && edge[0] === node2), 1);
+        else
+            return;
+
+        UNLE.nodesEdgeNum[node1] -= 1;
+        UNLE.nodesEdgeNum[node2] -= 1;
+    }
+
+    traverse_nodes(node1, node2) {
+        //TODO: implement animations before this...
     }
 }
 

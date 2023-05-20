@@ -33,21 +33,27 @@ Adding nodes to the graph:
 
 ```js
 // ID can be anything from an integer to a string
-graph.addNode(<id>);
+graph.add_node(<id>);
 ```
 
 Adding edges to the graph:
 
 ```js
 // INFO: length has been depreciated and will be removed in an upcoming version
-graph.addEdge(<id of first node>, <id of second node>, <length of edge>);
+graph.add_edge(<id of first node>, <id of second node>, <length of edge>);
 ```
 
 Removing nodes from the graph:
 
 ```js
 // This will also remove any connected edges
-graph.removeNode(<id>);
+graph.remove_node(<id>);
+```
+
+Removing edges from the graph:
+
+```js
+graph.remove_edge(<id of first node>, <id of second node>);
 ```
 
 ## Images

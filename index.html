@@ -28,10 +28,14 @@
             graph.add_edge(5, 15, edgeLen);
             graph.add_edge(7, 12, edgeLen);
 
+            graph.add_edge(17, 13, edgeLen);
+
             graph.add_node("removed!");
             graph.add_edge("removed!", 5, edgeLen);
 
             graph.remove_node("removed!");
+
+            graph.remove_edge(17, 13)
 
         </script>
     </body>
