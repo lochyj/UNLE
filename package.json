@@ -1,6 +1,6 @@
 {
   "name": "unle",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "An unconstrained force directed node graph layout engine written in javascript and designed for maximum speed and performance",
   "main": "./src/main.js",
   "scripts": {
