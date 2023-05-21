@@ -13,14 +13,14 @@
             let graph = new UNLE({
                 "canvas": document.getElementById("canvas"),
                 "show_id": false,
-                "node_radius": 7,
+                "node_radius": 10,
                 "node_color": 0x000000,
                 "edge_length": 100
             });
 
             /*
-            let nodes = 10;
-            let edges = 50;
+            let nodes = 200;
+            let edges = 600;
 
             for (let i = 0; i < nodes; i++) {
                 graph.add_node(i);
@@ -33,14 +33,73 @@
             }
             */
 
+            // generate a grid like graph
+            /*
+            let nodes = 20;
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    graph.add_node(i + j * nodes);
+                }
+            }
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    if (i > 0) {
+                        graph.add_edge(i + j * nodes, i - 1 + j * nodes);
+                    }
+                    if (j > 0) {
+                        graph.add_edge(i + j * nodes, i + (j - 1) * nodes);
+                    }
+                }
+            }
+
+            // connect the corners of the grid to each other
+
+            graph.add_edge(0, nodes - 1);
+            graph.add_edge(nodes - 1, nodes * nodes - 1);
+            graph.add_edge(nodes * nodes - 1, nodes * nodes - nodes);
+            graph.add_edge(nodes * nodes - nodes, 0);
+            */
+
+            // generate a 3d grid like graph
             ///*
+            let nodes = 6;
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    for (let k = 0; k < nodes; k++) {
+                        graph.add_node(i + j * nodes + k * nodes * nodes);
+                    }
+                }
+            }
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    for (let k = 0; k < nodes; k++) {
+                        if (i > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i - 1 + j * nodes + k * nodes * nodes);
+                        }
+                        if (j > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i + (j - 1) * nodes + k * nodes * nodes);
+                        }
+                        if (k > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i + j * nodes + (k - 1) * nodes * nodes);
+                        }
+                    }
+                }
+            }
+            //*/
+
+            /*
             var input = `
                 nodes: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+
                 1 -> 2
                 2 -> 3
                 3 -> 4
                 4 -> 1
-            
+
                 1 -> 5
                 2 -> 6
                 3 -> 7
@@ -63,7 +122,7 @@
             `
 
             graph.from_node_language(input)
-            //*/
+            */
 
         </script>
     </body>

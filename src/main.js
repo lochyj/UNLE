@@ -147,7 +147,7 @@ class UNLE {
             return;
 
         UNLE.dragTarget.parent.toLocal(event.global, null, UNLE.dragTarget.position);
-        
+
         // Lock the dragged node to the cursor / finger
         UNLE.locked.x = UNLE.dragTarget.x;
         UNLE.locked.y = UNLE.dragTarget.y;
@@ -239,12 +239,13 @@ class UNLE {
     }
 
     //TODO: experiment with not using sprite for higher quality
-    static createNode(xC, yC, id, text = id) {
-
+    static createNode(xC, yC, id, text = id, colour) {
+        if (colour == null)
+            colour = UNLE.nodeColor;
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
         nodeG.lineStyle(1, 0xffffff, 1);
-        nodeG.beginFill(UNLE.nodeColor, 1);
+        nodeG.beginFill(colour, 1);
         nodeG.drawCircle(0, 0, UNLE.nodeRadius);
         nodeG.endFill();
 
@@ -284,7 +285,7 @@ class UNLE {
         const k = Math.sqrt(((width * height) / 160)); // Optimal distance between nodes
 
         // Leave this at 2 for the moment. This is the optimal speed...
-        const accel = 2
+        const accel = 5;
 
         // Calculate repulsive forces between nodes
         nodes.forEach(node1 => {
@@ -322,7 +323,6 @@ class UNLE {
             source.dy += y;
             target.dx -= x;
             target.dy -= y;
-
         });
 
         // Move each node
@@ -343,14 +343,6 @@ class UNLE {
 
     static forceAtlas2() {
         // TODO: implement
-    }
-
-    // TODO: implement
-    static dragLayout() {
-        /* When you drag a node it can cause issues when using the layout algorithms so,
-         * to prevent this we should implement a simple algorithm that just moves the node to the cursor
-         * and pulls the graph behind it.
-         * */
     }
 
     static cool(t) {
@@ -413,8 +405,8 @@ class UNLE {
     // | Public Facing Functions |
     // |-------------------------|
 
-    add_node(id = None, value = id) {
-        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), id, value)
+    add_node(id = None, value = id, colour) {
+        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), id, value, colour)
         UNLE.nodesEdgeNum[id] = 0
     }
 
