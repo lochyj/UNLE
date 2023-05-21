@@ -472,7 +472,7 @@ class UNLE {
     }
 
     from_node_language(input) {
-        // TODO: implement a simple parser to convert the input into a graph
+        // TODO: check if the input is valid and if the nodes and edges are valid
         /* E.G:
          * nodes: <nodes> // Define all of the nodes
          * <node1> -> <node2> // Edges are defined like this

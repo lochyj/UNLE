@@ -68,6 +68,14 @@ graph.remove_edge(<id of first node>, <id of second node>);
 Using the node language:
 
 ```js
+let graph = new UNLE({
+    "canvas": document.getElementById("canvas"),
+    "show_id": false,
+    "node_radius": 7,
+    "node_color": 0x000000,
+    "edge_length": 100
+});
+
 // The node language is a way of describing a graph in a string
 input = `
     nodes: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
@@ -88,7 +96,7 @@ input = `
     5 -> 6
 `
 // Note this is a simple wrapper and has its limitations. Beware of bugs.
-from_node_language(input);
+graph.from_node_language(input);
 ```
 
 *The above code will produce the following graph:*
