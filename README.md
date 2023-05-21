@@ -108,3 +108,5 @@ graph.from_node_language(input);
 ![Node graph with a central node surrounded by 11 outer nodes connected with edges](./example.png)
 
 ![Node graph from node language example](./example2.png)
+
+![Another example](./example3.png)
