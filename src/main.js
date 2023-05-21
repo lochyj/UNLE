@@ -1,5 +1,7 @@
 "use strict"
 
+import zoom from './zoom.js'
+
 class UNLE {
     static app = new PIXI.Application({
         resolution: 1,
@@ -8,7 +10,7 @@ class UNLE {
         backgroundColor: 0x0A0A0A
     });
 
-    //This is neccessary to reuse the same texture for a simple line
+    //This is necessary to reuse the same texture for a simple line
     static lineG = new PIXI.Graphics();
     static lineT;
 
@@ -33,18 +35,8 @@ class UNLE {
 
     static nodesEdgeNum = {};
 
-    static edgeLengthDiv = 3;
-
     constructor(data) {
         data.canvas.appendChild(UNLE.app.view);
-
-        // get the coordinates of the centre of the screen
-        UNLE.xC = UNLE.app.renderer.width / 2;
-        UNLE.yC = UNLE.app.renderer.height / 2;
-
-        UNLE.canvas = data.canvas;
-
-        UNLE.pivot = NaN;
 
         if (data.debug) {
             UNLE.DebugDiv = data.debug;
@@ -70,7 +62,7 @@ class UNLE {
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
 
-        UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, { resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR });
+        UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
 
         UNLE.app.stage.eventMode = 'dynamic';
 
@@ -89,69 +81,11 @@ class UNLE {
 
         UNLE.app.stage.addChild(UNLE.Container);
 
-        UNLE.client = {
-            "cursor": {
-                "x": 0, "y": 0
-            }
-        };
-
-        UNLE.app.view.addEventListener("wheel", (event) => {
-            if (event.deltaY < 0) {
-                UNLE.zoom(1);
-            } else if (event.deltaY > 0) {
-                UNLE.zoom(-1);
-            } else {
-                return;
-            }
-        });
-
-        UNLE.app.view.addEventListener("touchmove", (event) => {
-            UNLE.client.cursor.x = event.touches[0].clientX;
-            UNLE.client.cursor.y = event.touches[0].clientY;
-        });
-
-        UNLE.app.view.addEventListener("mousemove", (event) => {
-            UNLE.client.cursor.x = event.clientX;
-            UNLE.client.cursor.y = event.clientY;
-        });
-
-        // Get middle click down
-        UNLE.app.view.addEventListener("mousedown", (event) => {
-            if (event.button === 1) {
-                UNLE.shouldLock = true;
-            }
-        });
-
-        // Get middle click up
-        UNLE.app.view.addEventListener("mouseup", (event) => {
-            if (event.button === 1) {
-                UNLE.shouldLock = false;
-                UNLE.Container.pivot.x = UNLE.xC;
-                UNLE.Container.pivot.y = UNLE.yC;
-            }
-        });
-
+        UNLE.zoom = new zoom(UNLE.Container, UNLE.app);
     }
 
     // Empty function to override in the constructor if needed that gets called within the main loop
     static DisplayDebug(){}
-
-    //! INFO: If you zoom out too far the graph inverts...
-    static zoom(direction) {
-        
-        // get the position of the mouse
-        //const mousePosition = UNLE.app.renderer.plugins.interaction.mouse.global;
-
-        // convert the mouse position to world space
-        //const point = UNLE.app.stage.toLocal(mousePosition);
-
-        // Get cursor position
-        UNLE.Container.scale.x += direction * 0.05;
-        UNLE.Container.scale.y += direction * 0.05;
-
-        UNLE.Container.pivot.x = UNLE.client.cursor.x;
-        UNLE.Container.pivot.y = UNLE.client.cursor.y;
-    }
 
     static initDebug() {
         const debugDiv = UNLE.DebugDiv;
@@ -188,7 +122,7 @@ class UNLE {
             nodeInfo.innerHTML = `Node ${node.name} <br> x: ${node.x} <br> y: ${node.y} <br> edges: ${UNLE.nodesEdgeNum[node.name]}`;
             UNLE.NodesInfo.appendChild(nodeInfo);
         });
-        
+
         UNLE.edgesList.forEach(edge => {
             const edgeInfo = document.createElement('div');
             edgeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px; border-radius: 5px;';
@@ -217,12 +151,15 @@ class UNLE {
         // Lock the dragged node to the cursor / finger
         UNLE.locked.x = UNLE.dragTarget.x;
         UNLE.locked.y = UNLE.dragTarget.y;
+
+        UNLE.zoom.disable_pan();
     }
 
     static onDragEnd() {
         if (UNLE.dragTarget) {
             UNLE.app.stage.off('pointermove', UNLE.onDragMove);
             UNLE.dragTarget = null;
+            UNLE.zoom.enable_pan();
         }
     }
 
@@ -391,6 +328,14 @@ class UNLE {
 
     static kamadaKawai() {
         //TODO: implement
+    }
+
+    // TODO: implement
+    static dragLayout() {
+        /* When you drag a node it can cause issues when using the layout algorithms so,
+         * to prevent this we should implement a simple algorithm that just moves the node to the cursor
+         * and pulls the graph behind it.
+         * */
     }
 
     static cool(t) {
