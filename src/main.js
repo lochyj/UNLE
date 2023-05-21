@@ -38,10 +38,13 @@ class UNLE {
     constructor(data) {
         data.canvas.appendChild(UNLE.app.view);
 
+        UNLE.isDebug = false;
+
         if (data.debug) {
             UNLE.DebugDiv = data.debug;
             UNLE.DisplayDebug = UNLE.debug;
             UNLE.initDebug();
+            UNLE.isDebug = true;
         }
 
         if (data.show_id != null) UNLE.showID = data.show_id; else UNLE.showID = true;
@@ -54,7 +57,10 @@ class UNLE {
         UNLE.init();
 
         // Main loop
-        UNLE.main();
+        if (!UNLE.isDebug)
+            UNLE.main();
+        else
+            UNLE.debugMain();
     }
 
     static init() {
@@ -104,6 +110,11 @@ class UNLE {
         EdgesDetails.appendChild(EdgeTitle);
         const EdgesInfo = document.createElement('div');
         EdgesDetails.appendChild(EdgesInfo);
+
+        const stepButton = document.createElement('button');
+        stepButton.innerText = 'Step';
+        stepButton.onclick = UNLE.debugMain;
+        debugDiv.appendChild(stepButton);
 
         debugDiv.appendChild(NodesDetails);
         debugDiv.appendChild(EdgesDetails);
@@ -330,6 +341,10 @@ class UNLE {
         //TODO: implement
     }
 
+    static forceAtlas2() {
+        // TODO: implement
+    }
+
     // TODO: implement
     static dragLayout() {
         /* When you drag a node it can cause issues when using the layout algorithms so,
@@ -375,6 +390,25 @@ class UNLE {
         requestAnimationFrame(UNLE.main);
     }
 
+    static async debugMain() {
+        // This might slow us down even when we don't need to debug...
+        UNLE.DisplayDebug();
+        // -
+
+        //console.log(window.scrollX)
+
+        if (UNLE.edgesList != []) {
+            UNLE.LayoutAlgorithm();
+        }
+
+        if (UNLE.dragTarget != null) {
+            UNLE.dragTarget.x = UNLE.locked.x;
+            UNLE.dragTarget.y = UNLE.locked.y;
+        }
+
+        UNLE.drawLines();
+    }
+
     // |-------------------------|
     // | Public Facing Functions |
     // |-------------------------|
@@ -384,6 +418,8 @@ class UNLE {
         UNLE.nodesEdgeNum[id] = 0
     }
 
+    // TODO: if node1 and node2 are the same then the edge should be implemented in a special way... add this.
+    // TODO: also support multiple edges to and from the same nodes e.g: node 1 -> node 2, node 1 -> node 2
     add_edge(nodeID1, nodeID2, length = 100) {
         UNLE.edgesList.push([nodeID1, nodeID2, length])
         UNLE.nodesEdgeNum[nodeID1] += 1
@@ -392,6 +428,18 @@ class UNLE {
 
     //TODO: make this more user friendly...
     nodes() {
+        /* This should return a list of all the nodes in the graph...
+         * It should look like
+         * graph.nodes -> {
+         *     "id": {
+         *         "value": <value>,
+         *         "x": <x value>,
+         *         "y": <y value>
+         *         "edges": <number of edges>
+         *     },
+         *     ...
+         * }
+         * */
         return UNLE.NodesContainer.children
     }
 
@@ -421,6 +469,48 @@ class UNLE {
 
     traverse_nodes(node1, node2) {
         //TODO: implement animations before this...
+    }
+
+    from_node_language(input) {
+        // TODO: implement a simple parser to convert the input into a graph
+        /* E.G:
+         * nodes: <nodes> // Define all of the nodes
+         * <node1> -> <node2> // Edges are defined like this
+
+         * For example:
+         * nodes: node1, node2, node3
+         * node1 -> node2
+         * node1 -> node3
+         * node2 -> node3
+         * */
+
+        var lines = input.split('\n');
+
+        var nodes = [];
+        var edges = [];
+
+        for (var i = 0; i < lines.length; i++) {
+            if (lines[i].trim().startsWith("nodes:")) {
+                lines[i].split("nodes:")[1].split(",").forEach(node => nodes.push(node.trim()));
+            } else {
+                if (lines[i] === '')
+                    continue;
+                edges.push(lines[i].split("->").map(node => node.trim()));
+            }
+        }
+
+        nodes.forEach((node) => {
+            UNLE.createNode(UNLE.randomX(), UNLE.randomY(), node, node);
+            UNLE.nodesEdgeNum[node] = 0;
+        });
+
+        edges.forEach((edge) => {
+            if (edge.length !== 2)
+                return;
+            UNLE.edgesList.push([edge[0], edge[1], 100])
+            UNLE.nodesEdgeNum[edge[0]] += 1
+            UNLE.nodesEdgeNum[edge[1]] += 1
+        });
     }
 }
 

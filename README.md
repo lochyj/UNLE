@@ -65,6 +65,38 @@ Removing edges from the graph:
 graph.remove_edge(<id of first node>, <id of second node>);
 ```
 
+Using the node language:
+
+```js
+// The node language is a way of describing a graph in a string
+input = `
+    nodes: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    1 -> 2
+    2 -> 3
+    3 -> 4
+    4 -> 5
+    5 -> 6
+    6 -> 7
+    7 -> 8
+    8 -> 9
+    9 -> 10
+    10 -> 1
+    5 -> 1
+    5 -> 2
+    5 -> 3
+    5 -> 4
+    5 -> 6
+`
+// Note this is a simple wrapper and has its limitations. Beware of bugs.
+from_node_language(input);
+```
+
+*The above code will produce the following graph:*
+
+![Node graph from above node language](./example2.png)
+
 ## Images
 
 ![Node graph with a central node surrounded by 11 outer nodes connected with edges](./example.png)
+
+![Node graph from node language example](./example2.png)

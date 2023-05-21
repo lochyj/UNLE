@@ -16,26 +16,49 @@
 
             let graph = new UNLE({
                 "canvas": document.getElementById("canvas"),
-                "debug": document.getElementById("debug")
+                "debug": document.getElementById("debug"),
+                "show_id": false,
+                "node_radius": 7,
+                "node_color": 0x000000,
+                "edge_length": 100
             });
-            
-            let edgeLen = 100;
-            graph.add_node(0);
-            for (let i = 1; i < 10; i++) {
+            /*
+            let nodes = 10;
+            let edges = 50;
+
+            for (let i = 0; i < nodes; i++) {
                 graph.add_node(i);
-                graph.add_edge(0, i ,edgeLen);
             }
 
-            graph.add_node("Yes");
-            graph.add_edge(4, "Yes", edgeLen);
-
-            for (let i = 10; i < 19; i++) {
-                graph.add_node(i);
-                graph.add_edge("Yes", i ,edgeLen);
+            for (let i = 0; i < edges; i++) {
+                let a = Math.floor(Math.random() * nodes);
+                let b = Math.floor(Math.random() * nodes);
+                graph.add_edge(a, b);
             }
+            */
 
-            graph.add_edge(5, 15, edgeLen);
-            graph.add_edge(7, 12, edgeLen);
+            ///*
+            var input = `
+                nodes: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+                1 -> 2
+                2 -> 3
+                3 -> 4
+                4 -> 5
+                5 -> 6
+                6 -> 7
+                7 -> 8
+                8 -> 9
+                9 -> 10
+                10 -> 1
+                5 -> 1
+                5 -> 2
+                5 -> 3
+                5 -> 4
+                5 -> 6
+            `
+
+            graph.from_node_language(input)
+            //*/
         </script>
     </body>
 </html>
