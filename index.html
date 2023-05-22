@@ -15,7 +15,8 @@
                 "show_id": false,
                 "node_radius": 10,
                 "node_color": 0x000000,
-                "edge_length": 100
+                "edge_length": 100,
+                "edge_width": 5,
             });
 
             /*
@@ -35,7 +36,7 @@
 
             // generate a grid like graph
             /*
-            let nodes = 20;
+            let nodes = 30;
 
             for (let i = 0; i < nodes; i++) {
                 for (let j = 0; j < nodes; j++) {
@@ -56,15 +57,19 @@
 
             // connect the corners of the grid to each other
 
-            graph.add_edge(0, nodes - 1);
-            graph.add_edge(nodes - 1, nodes * nodes - 1);
-            graph.add_edge(nodes * nodes - 1, nodes * nodes - nodes);
-            graph.add_edge(nodes * nodes - nodes, 0);
+            //graph.add_edge(0, nodes - 1);
+            //graph.add_edge(nodes - 1, nodes * nodes - 1);
+            //graph.add_edge(nodes * nodes - 1, nodes * nodes - nodes);
+            //graph.add_edge(nodes * nodes - nodes, 0);
             */
 
             // generate a 3d grid like graph
             ///*
-            let nodes = 6;
+
+            //THIS REQUIRES A VERY POWERFUL CPU TO RUN!!!!
+            //let nodes = 17;
+
+            let nodes = 7;
 
             for (let i = 0; i < nodes; i++) {
                 for (let j = 0; j < nodes; j++) {
@@ -90,6 +95,58 @@
                 }
             }
             //*/
+
+            // generate a 4d grid like graph
+            /*
+            let nodes = 5;
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    for (let k = 0; k < nodes; k++) {
+                        for (let l = 0; l < nodes; l++) {
+                            graph.add_node(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes);
+                        }
+                    }
+                }
+            }
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    for (let k = 0; k < nodes; k++) {
+                        for (let l = 0; l < nodes; l++) {
+                            if (i > 0) {
+                                graph.add_edge(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes, i - 1 + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes);
+                            }
+                            if (j > 0) {
+                                graph.add_edge(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes, i + (j - 1) * nodes + k * nodes * nodes + l * nodes * nodes * nodes);
+                            }
+                            if (k > 0) {
+                                graph.add_edge(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes, i + j * nodes + (k - 1) * nodes * nodes + l * nodes * nodes * nodes);
+                            }
+                            if (l > 0) {
+                                graph.add_edge(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes, i + j * nodes + k * nodes * nodes + (l - 1) * nodes * nodes * nodes);
+                            }
+                        }
+                    }
+                }
+            }
+            */
+
+            // generate an interesting looking graph
+            /*
+            let nodes = 1000;
+
+            for (let i = 0; i < nodes; i++) {
+                graph.add_node(i);
+            }
+
+            // connect in a line
+
+            for (let i = 0; i < nodes - 1; i++) {
+                graph.add_edge(i, i + 1);
+            }
+
+            */
 
             /*
             var input = `

@@ -51,6 +51,7 @@ class UNLE {
         if (data.node_radius != null) UNLE.nodeRadius = data.node_radius; else UNLE.nodeRadius = 20;
         if (data.node_color != null) UNLE.nodeColor = data.node_color; else UNLE.nodeColor = 0x808080;
         if (data.edge_length != null) UNLE.edgeLength = data.edge_length / 10; else UNLE.edgeLength = 100 / 10;
+        if (data.edge_width != null) UNLE.edgeWidth = data.edge_width; else UNLE.edgeWidth = 3;
 
         UNLE.LayoutAlgorithm = UNLE.fruchtermanReingold;
 
@@ -215,12 +216,13 @@ class UNLE {
         UNLE.LinesContainer.removeChildren();
 
         UNLE.edgesList.forEach(edge => {
+            //TODO: optimize this...
             UNLE.drawLine(
                 UNLE.NodesContainer.getChildByName(edge[0]).x,
                 UNLE.NodesContainer.getChildByName(edge[0]).y,
                 UNLE.NodesContainer.getChildByName(edge[1]).x,
                 UNLE.NodesContainer.getChildByName(edge[1]).y,
-                2,
+                UNLE.edgeWidth,
                 edge[2]
             )
         });
@@ -285,29 +287,31 @@ class UNLE {
         const k = Math.sqrt(((width * height) / 160)); // Optimal distance between nodes
 
         // Leave this at 2 for the moment. This is the optimal speed...
-        const accel = 5;
+        const accel = 85;
 
         // Calculate repulsive forces between nodes
-        nodes.forEach(node1 => {
-            // Initialize forces
+        for (var i = 0; i < nodes.length; i++) {
+            const node1 = nodes[i];
             node1.dx = 0;
             node1.dy = 0;
-            nodes.forEach(node2 => {
-                if (node1 !== node2) {
+            for (var j = 0; j < nodes.length; j++) {
+                const node2 = nodes[j];
+                //if (node1 !== node2) {
                     const dx = node1.x - node2.x;
                     const dy = node1.y - node2.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     if (distance <= 0)
-                        return;
+                        continue;
                     const force = k * k / distance;
                     node1.dx += dx / distance * force;
                     node1.dy += dy / distance * force;
-                }
-            })
-        })
+                //}
+            }
+        }
 
         // Calculate attractive forces along edges
-        edges.forEach(edge => {
+        for (var i = 0; i < edges.length; i++) {
+            const edge = edges[i];
             const source = UNLE.NodesContainer.getChildByName(edge[0]);
             const target = UNLE.NodesContainer.getChildByName(edge[1]);
 
@@ -315,7 +319,7 @@ class UNLE {
             const dy = target.y - source.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance <= 0)
-                return;
+                continue;
             const force = distance * distance / k;
             const x = dx / distance * force;
             const y = dy / distance * force;
@@ -323,10 +327,11 @@ class UNLE {
             source.dy += y;
             target.dx -= x;
             target.dy -= y;
-        });
+        }
 
         // Move each node
-        nodes.forEach(node => {
+        for (var i = 0; i < nodes.length; i++) {
+            const node = nodes[i];
             // TODO: rename this to something more cohesive...
             const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
             node.x += accel * (node.dx / EdgeLength);
@@ -334,7 +339,7 @@ class UNLE {
             // TODO: fix the constraints
             //node.x = Math.min(Math.max(node.x, 0), width);
             //node.y = Math.min(Math.max(node.y, 0), height);
-        })
+        }
     }
 
     static kamadaKawai() {
@@ -370,9 +375,6 @@ class UNLE {
         }
 
         if (UNLE.shouldLock) {
-            // get centre of screen
-
-
             UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.app.renderer.width / 2;
             UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.app.renderer.height / 2;
         }
@@ -416,6 +418,7 @@ class UNLE {
         UNLE.edgesList.push([nodeID1, nodeID2, length])
         UNLE.nodesEdgeNum[nodeID1] += 1
         UNLE.nodesEdgeNum[nodeID2] += 1
+        console.log(UNLE.edgesList.length)
     }
 
     //TODO: make this more user friendly...
