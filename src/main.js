@@ -197,20 +197,6 @@ class UNLE {
         UNLE.LinesContainer.addChild(line);
     }
 
-    static drawActiveLine(x1, y1, x2, y2, width) {
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const line = new PIXI.Sprite(UNLE.activeLineT);
-        line.x = x2;
-        line.y = y2;
-        line.height = Math.sqrt((dx * dx) + (dy * dy));
-        line.width = width;
-
-        line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
-
-        UNLE.LinesContainer.addChild(line);
-    }
-
     // Implement this fully later -> directed edges and weighted edges to go...
     static drawLines() {
         UNLE.LinesContainer.removeChildren();
@@ -278,16 +264,11 @@ class UNLE {
         const nodes = UNLE.NodesContainer.children;
         const edges = UNLE.edgesList;
 
-        //TODO: Move this to a global variable that is updated every now and then
-        const width = UNLE.app.renderer.width;
-        const height = UNLE.app.renderer.height;
-        //
-
         //TODO: add UNLE.edgeLength
-        const k = Math.sqrt(((width * height) / 160)); // Optimal distance between nodes
+        const k = Math.sqrt(((UNLE.app.renderer.width * UNLE.app.renderer.height) / 160)); // Optimal distance between nodes
 
-        // Leave this at 2 for the moment. This is the optimal speed...
-        const accel = 85;
+        // Change based on the number of nodes...
+        const accel = 3;
 
         // Calculate repulsive forces between nodes
         for (var i = 0; i < nodes.length; i++) {
@@ -296,16 +277,14 @@ class UNLE {
             node1.dy = 0;
             for (var j = 0; j < nodes.length; j++) {
                 const node2 = nodes[j];
-                //if (node1 !== node2) {
-                    const dx = node1.x - node2.x;
-                    const dy = node1.y - node2.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance <= 0)
-                        continue;
-                    const force = k * k / distance;
-                    node1.dx += dx / distance * force;
-                    node1.dy += dy / distance * force;
-                //}
+                const dx = node1.x - node2.x;
+                const dy = node1.y - node2.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance <= 0)
+                    continue;
+                const force = k * k / distance;
+                node1.dx += dx / distance * force;
+                node1.dy += dy / distance * force;
             }
         }
 
@@ -332,13 +311,9 @@ class UNLE {
         // Move each node
         for (var i = 0; i < nodes.length; i++) {
             const node = nodes[i];
-            // TODO: rename this to something more cohesive...
             const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
             node.x += accel * (node.dx / EdgeLength);
             node.y += accel * (node.dy / EdgeLength);
-            // TODO: fix the constraints
-            //node.x = Math.min(Math.max(node.x, 0), width);
-            //node.y = Math.min(Math.max(node.y, 0), height);
         }
     }
 
