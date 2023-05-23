@@ -14,12 +14,12 @@ const config = {
   url: 'https://lochyj.github.io/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/unle/',
+  baseUrl: '/UNLE/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'lochyj', // Usually your GitHub org/user name.
-  projectName: 'unle', // Usually your repo name.
+  projectName: 'UNLE', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -66,7 +66,7 @@ const config = {
             label: 'Tutorial',
           },
           {
-            href: 'https://github.com/lochyj/unle',
+            href: 'https://github.com/lochyj/UNLE',
             label: 'GitHub',
             position: 'right',
           },
@@ -98,7 +98,7 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/lochyj/unle',
+                href: 'https://github.com/lochyj/UNLE',
               },
             ],
           },
