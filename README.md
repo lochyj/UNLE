@@ -3,6 +3,9 @@
 
 UNLE stands for Unconstrained Node Layout Engine.
 
+UNLE is capable of handling >4k nodes and >10k edges being rendered at once.
+[Very latge graph](./example4.png)
+
 Click [here](https://lochyj.github.io/UNLE/) for a demo.
 
 ## Documentation
