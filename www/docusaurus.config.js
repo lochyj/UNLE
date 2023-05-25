@@ -103,7 +103,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Lachlan Jowett and UNLE contributors , Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Lachlan Jowett, Brandon Chung and UNLE contributors , Inc. Built with Docusaurus.`,
       },
       prism: {
         theme: lightCodeTheme,
