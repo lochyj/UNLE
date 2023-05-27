@@ -267,8 +267,8 @@ class UNLE {
         //TODO: add UNLE.edgeLength
         const k = Math.sqrt(((UNLE.app.renderer.width * UNLE.app.renderer.height) / 160)); // Optimal distance between nodes
 
-        // Change based on the number of nodes...
-        const accel = 3;
+        // TODO: Change based on the number of nodes...
+        const accel = 2;
 
         // Calculate repulsive forces between nodes
         for (var i = 0; i < nodes.length; i++) {
@@ -304,8 +304,8 @@ class UNLE {
             const y = dy / distance * force;
             source.dx += x;
             source.dy += y;
-            target.dx -= x;
-            target.dy -= y;
+            target.dx += -x;
+            target.dy += -y;
         }
 
         // Move each node
@@ -315,6 +315,51 @@ class UNLE {
             node.x += accel * (node.dx / EdgeLength);
             node.y += accel * (node.dy / EdgeLength);
         }
+    }
+
+    generateRandomGraph(graph, numEdges, numNodes) {
+
+        // Add nodes to the graph
+        for (var i = 1; i <= numNodes; i++) {
+            graph.add_node(i);
+        }
+
+        // Connect the nodes randomly
+        var connectedNodes = new Set();
+        for (var i = 1; i <= numNodes; i++) {
+            var nodeId = i;
+
+            // Connect the current node with a random previously connected node
+            if (connectedNodes.size > 0) {
+                var randomNodeId = Array.from(connectedNodes)[Math.floor(Math.random() * connectedNodes.size)];
+                graph.add_edge(nodeId, randomNodeId);
+            }
+
+            connectedNodes.add(nodeId);
+        }
+
+        // Add additional random edges if required
+        var remainingEdges = numEdges - numNodes + 1;
+        while (remainingEdges > 0) {
+            var sourceNodeId = Math.floor(Math.random() * numNodes) + 1;
+            var targetNodeId = Math.floor(Math.random() * numNodes) + 1;
+
+            // Avoid self-loops and duplicate edges
+            if (sourceNodeId !== targetNodeId && !edgeExists(graph.edges, sourceNodeId, targetNodeId)) {
+                graph.add_edge(sourceNodeId, targetNodeId);
+                remainingEdges--;
+            }
+        }
+    }
+
+    static edgeExists(edges, source, target) {
+        for (var i = 0; i < edges.length; i++) {
+            var edge = edges[i];
+            if ((edge[0] === source && edge[1] === target) || (edge[0] === target && edge[1] === source)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static kamadaKawai() {

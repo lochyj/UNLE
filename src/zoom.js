@@ -44,7 +44,7 @@ export default class zoom {
     // TODO: Give s, x and y more cohesive names
     zoom(s, x, y) {
         const stage = this.Container;
-        s = s > 0 ? 2 : 0.5;
+        s = s > 0 ? 1.5 : 0.75;
         var worldPos = {x: (x - stage.x) / stage.scale.x, y: (y - stage.y)/stage.scale.y};
         var newScale = {x: stage.scale.x * s, y: stage.scale.y * s};
 

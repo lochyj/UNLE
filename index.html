@@ -19,6 +19,15 @@
                 "edge_width": 5,
             });
 
+            // systematically generate a random graph where all nodes are connected, but not to themselves
+
+            let nodes = 100;
+            let edges = 1000;
+
+            graph.generateRandomGraph(graph, edges, nodes);
+
+
+
             /*
             let nodes = 200;
             let edges = 600;
@@ -64,7 +73,7 @@
             */
 
             // generate a 3d grid like graph
-            ///*
+            /*
 
             //THIS REQUIRES A VERY POWERFUL CPU TO RUN!!!!
             //let nodes = 17;
@@ -94,7 +103,7 @@
                     }
                 }
             }
-            //*/
+            */
 
             // generate a 4d grid like graph
             /*
