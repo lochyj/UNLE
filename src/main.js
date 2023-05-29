@@ -40,9 +40,9 @@ class UNLE {
 
     static k = Math.sqrt(((UNLE.app.renderer.width * UNLE.app.renderer.height) / 160));
 
-    static gpu = new GPU({canvas: UNLE.app.canvas}); //Use same canvas and context as PIXI app
+    static gpu;
 
-    static fruchtermanReingoldGPUCompute = UNLE.gpu.createKernel(function(nodes, movement) {return 0},{output: [2, 2]});
+    static fruchtermanReingoldGPUCompute = 0;
 
     static buildForces() {
         UNLE.fruchtermanReingoldGPUCompute.destroy()
@@ -106,8 +106,6 @@ class UNLE {
         if (data.edge_length != null) UNLE.edgeLength = data.edge_length / 10; else UNLE.edgeLength = 100 / 10;
         if (data.edge_width != null) UNLE.edgeWidth = data.edge_width; else UNLE.edgeWidth = 3;
 
-        UNLE.LayoutAlgorithm = UNLE.fruchtermanReingoldHybrid;
-
         UNLE.init();
 
         // Main loop
@@ -142,6 +140,17 @@ class UNLE {
         UNLE.app.stage.addChild(UNLE.Container);
 
         UNLE.zoom = new zoom(UNLE.Container, UNLE.app);
+
+        // Probably a v8 browser
+        if (navigator.javaEnabled.toString() == 'function javaEnabled() { [native code] }') {
+            UNLE.gpu = new GPU.GPU({canvas: UNLE.app.canvas});
+            UNLE.fruchtermanReingoldGPUCompute = UNLE.gpu.createKernel(function(nodes, movement) {return 0},{output: [2, 2]});
+            UNLE.LayoutAlgorithm = UNLE.fruchtermanReingoldHybrid;
+        }
+        // Probably not a v8 browser
+        else {
+            UNLE.LayoutAlgorithm = UNLE.fruchtermanReingold;
+        }
     }
 
     // Empty function to override in the constructor if needed that gets called within the main loop
@@ -539,7 +548,9 @@ class UNLE {
         UNLE.nodesEdgeNum[nodeID1] += 1
         UNLE.nodesEdgeNum[nodeID2] += 1
         
-        UNLE.buildForces()
+        // Run this if v8 is used, otherwise do not run this line
+        if (UNLE.fruchtermanReingoldGPUCompute != 0) UNLE.buildForces()
+
         const line = new PIXI.Sprite(UNLE.lineT);
         UNLE.LinesContainer.addChild(line);
     }
