@@ -42,7 +42,9 @@ class UNLE {
 
     static gpu;
 
-    static fruchtermanReingoldGPUCompute = 0;
+    static fruchtermanReingoldGPUCompute;
+
+    static isChrome = false;
 
     static buildForces() {
         UNLE.fruchtermanReingoldGPUCompute.destroy()
@@ -146,6 +148,7 @@ class UNLE {
             UNLE.gpu = new GPU.GPU({canvas: UNLE.app.canvas});
             UNLE.fruchtermanReingoldGPUCompute = UNLE.gpu.createKernel(function(nodes, movement) {return 0},{output: [2, 2]});
             UNLE.LayoutAlgorithm = UNLE.fruchtermanReingoldHybrid;
+            UNLE.isChrome = true;
         }
         // Probably not a v8 browser
         else {
@@ -549,7 +552,7 @@ class UNLE {
         UNLE.nodesEdgeNum[nodeID2] += 1
         
         // Run this if v8 is used, otherwise do not run this line
-        if (UNLE.fruchtermanReingoldGPUCompute != 0) UNLE.buildForces()
+        if (UNLE.isChrome) UNLE.buildForces()
 
         const line = new PIXI.Sprite(UNLE.lineT);
         UNLE.LinesContainer.addChild(line);
