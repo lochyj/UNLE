@@ -10,6 +10,9 @@ class UNLE {
         backgroundColor: 0x0A0A0A
     });
 
+    static attractWorker = new Worker('./src/attractForce.js')
+    static repelWorker = new Worker('./src/repelForce.js')
+
     //This is necessary to reuse the same texture for a simple line
     static lineG = new PIXI.Graphics();
     static lineT;
@@ -40,45 +43,13 @@ class UNLE {
 
     static k = Math.sqrt(((UNLE.app.renderer.width * UNLE.app.renderer.height) / 160));
 
-    static gpu;
 
-    static fruchtermanReingoldGPUCompute;
+    static isAttractReady = true;
+    static isRepelReady = true;
 
-    static isChrome = false;
-
-    static buildForces() {
-        UNLE.fruchtermanReingoldGPUCompute.destroy()
-
-        UNLE.fruchtermanReingoldGPUCompute = UNLE.gpu.createKernel(function(nodes, movement) {
-            const result = movement[this.thread.y][this.thread.x];
-            for (let i = 0; i < (this.constants.length); i++) {
-                if (i != this.thread.y) {
-                    const dx = nodes[this.thread.y][0] - nodes[i][0];
-                    const dy = nodes[this.thread.y][1] - nodes[i][1];
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance <= 0){
-                        result = 0;
-                    }
-                    
-                    else {
-                        const force = this.constants.k * this.constants.k / distance;
-                        if (this.thread.x == 0) {
-                            result += (dx / distance * force)
-                        }
-                        if (this.thread.x == 1) {
-                            result += dy / distance * force
-                        }
-                    }
-                }
-            }
-            return result;
-        }, {
-            constants: {length: UNLE.NodesContainer.children.length , k: UNLE.k},
-            output: [2, UNLE.NodesContainer.children.length],
-            tactic: 'speed'
-        })
-    }
+    static attractForces = [[0]];
+    static repelForces = [[0]];
+    static linesForces;
 
     static generateNodePositionMatrix() {
         const nodes = UNLE.NodesContainer.children;
@@ -143,17 +114,9 @@ class UNLE {
 
         UNLE.zoom = new zoom(UNLE.Container, UNLE.app);
 
-        // Probably a v8 browser
-        if (navigator.javaEnabled.toString() == 'function javaEnabled() { [native code] }') {
-            UNLE.gpu = new GPU.GPU({canvas: UNLE.app.canvas});
-            UNLE.fruchtermanReingoldGPUCompute = UNLE.gpu.createKernel(function(nodes, movement) {return 0},{output: [2, 2]});
-            UNLE.LayoutAlgorithm = UNLE.fruchtermanReingoldHybrid;
-            UNLE.isChrome = true;
-        }
-        // Probably not a v8 browser
-        else {
-            UNLE.LayoutAlgorithm = UNLE.fruchtermanReingold;
-        }
+        UNLE.LayoutAlgorithm = UNLE.fruchtermanReingoldWebWorker;
+
+        UNLE.LinesContainer.interactiveChildren = false;
     }
 
     // Empty function to override in the constructor if needed that gets called within the main loop
@@ -269,16 +232,16 @@ class UNLE {
             line.height = Math.sqrt((dx * dx) + (dy * dy));
             line.width = UNLE.edgeWidth;
 
-            line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;            
+            line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
         };
     }
 
     static randomX() {
-        return Math.floor(Math.random() * UNLE.app.stage.width);
+        return Math.floor(Math.random() * UNLE.app.renderer.width);
     }
 
     static randomY() {
-        return Math.floor(Math.random() * UNLE.app.stage.height);
+        return Math.floor(Math.random() * UNLE.app.renderer.height);
     }
 
     static randomColour() {
@@ -319,106 +282,74 @@ class UNLE {
         UNLE.NodesContainer.addChild(node);
     }
 
-    static fruchtermanReingold() {
-        const nodes = UNLE.NodesContainer.children;
-        const nodesLength = nodes.length;
-        const edges = UNLE.edgesListIndexes;
+    static fruchtermanReingoldWebWorker() {
 
-        //TODO: add UNLE.edgeLength
+        const accel = 70
 
-        // Change based on the number of nodes...
-        const accel = 3;
+        if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0) {
 
-        let movement = Array(nodesLength);
-        for (let i = 0; i < nodesLength; i++) movement[i] = [0, 0];
+            if (UNLE.isAttractReady || UNLE.isRepelReady) {
+                const nodes = UNLE.generateNodePositionMatrix();
 
-        // Calculate repulsive forces between nodes
-        for (let i = 0; i < nodesLength; i++) {
-            const node1 = nodes[i];
-            for (var j = 0; j < nodesLength; j++) {
-                const node2 = nodes[j];
-                const dx = node1.x - node2.x;
-                const dy = node1.y - node2.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance <= 0)
-                    continue;
-                const force = UNLE.k * UNLE.k / distance;
-                movement[i][0] += dx / distance * force;
-                movement[i][1] += dy / distance * force;
+                if (UNLE.isAttractReady) {
+                    UNLE.attractWorker.postMessage([nodes, UNLE.edgesListIndexes])
+                    UNLE.isAttractReady = false
+                }
+
+                if (UNLE.isRepelReady) {
+                    UNLE.repelWorker.postMessage(nodes)
+                    UNLE.isRepelReady = false
+                }
             }
         }
 
-        // Calculate attractive forces along edges
-        for (let i = 0; i < edges.length; i++) {
-            const edge = edges[i];
-            const sourceIndex = edge[0];
-            const source = UNLE.NodesContainer.children[sourceIndex];
-            const targetIndex = edge[1];
-            const target = UNLE.NodesContainer.children[targetIndex];
+        UNLE.attractWorker.onmessage = e => {
 
-            const dx = target.x - source.x;
-            const dy = target.y - source.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance <= 0)
-                continue;
-            const force = distance * distance / UNLE.k;
-            const x = dx / distance * force;
-            const y = dy / distance * force;
-            movement[sourceIndex][0] += x;
-            movement[sourceIndex][1] += y;
-            movement[targetIndex][0] -= x;
-            movement[targetIndex][1] -= y;
+            UNLE.attractForces = e.data[0]
+            UNLE.linesForces = e.data[1]
         }
 
-        // Move each node
-        for (let i = 0; i < nodesLength; i++) {
-            const node = nodes[i];
-            const EdgeLength = nodesLength * UNLE.nodesEdgeNum[node.name];
-            node.x += accel * (movement[i][0] / EdgeLength);
-            node.y += accel * (movement[i][1] / EdgeLength);
-        }
-    }
+        UNLE.repelWorker.onmessage = e => {
 
-    static fruchtermanReingoldHybrid() {
-        const nodes = UNLE.NodesContainer.children;
-        const nodesLength = nodes.length;
-        const edges = UNLE.edgesListIndexes;
-
-        const accel = 3;
-
-        let movement = Array(nodesLength);
-        for (let i = 0; i < nodesLength; i++) movement[i] = [0, 0];
-
-        // Calculate attractive forces along edges
-        for (let i = 0; i < edges.length; i++) {
-            const edge = edges[i];
-            const sourceIndex = edge[0];
-            const source = UNLE.NodesContainer.children[sourceIndex];
-            const targetIndex = edge[1];
-            const target = UNLE.NodesContainer.children[targetIndex];
-
-            const dx = target.x - source.x;
-            const dy = target.y - source.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance <= 0)
-                continue;
-            const force = distance * distance / UNLE.k;
-            const x = dx / distance * force;
-            const y = dy / distance * force;
-            movement[sourceIndex][0] += x;
-            movement[sourceIndex][1] += y;
-            movement[targetIndex][0] -= x;
-            movement[targetIndex][1] -= y;
+            UNLE.repelForces = e.data
+            UNLE.isRepelReady = true
         }
 
-        const forces = UNLE.fruchtermanReingoldGPUCompute(UNLE.generateNodePositionMatrix(), movement);
+        // IMplementing ostrich algorithm
+        if (UNLE.attractForces[0][0] !== 0 && UNLE.repelForces[0][0] !== 0) {
+            const nodes = UNLE.NodesContainer.children
+            const lines = UNLE.LinesContainer.children
 
-        // Move each node
-        for (let i = 0; i < nodes.length; i++) {
-            const node = nodes[i];
-            const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
-            nodes[i].x += accel * (forces[i][0] / EdgeLength);
-            nodes[i].y += accel * (forces[i][1] / EdgeLength);
+            // Move each node
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i]
+                const moveX = UNLE.attractForces[i][0] + UNLE.repelForces[i][0]
+                const moveY = UNLE.attractForces[i][1] + UNLE.repelForces[i][1]
+                const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
+                node.x += accel * (moveX / EdgeLength)
+                node.y += accel * (moveY / EdgeLength)
+            }
+
+            // Move lines
+            for (let i  = 0; i < UNLE.edgesList.length; i++) {
+                const line = lines[i];
+
+                line.x = UNLE.linesForces[i][0];
+                line.y = UNLE.linesForces[i][1];
+                line.height = UNLE.linesForces[i][2];
+                line.angle = UNLE.linesForces[i][3];
+            }
+            UNLE.isAttractReady = true
+        }
+
+        if (UNLE.dragTarget != null) {
+            UNLE.dragTarget.x = UNLE.locked.x;
+            UNLE.dragTarget.y = UNLE.locked.y;
+        }
+
+        if (UNLE.shouldLock) {
+            UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.app.renderer.width / 2;
+            UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.app.renderer.height / 2;
         }
     }
 
@@ -484,27 +415,9 @@ class UNLE {
     }
 
     static async main() {
-        // This might slow us down even when we don't need to debug...
-        UNLE.DisplayDebug();
-        // -
+        UNLE.LayoutAlgorithm();
 
-        //console.log(window.scrollX)
-
-        if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0) {
-            UNLE.LayoutAlgorithm();
-        }
-
-        if (UNLE.dragTarget != null) {
-            UNLE.dragTarget.x = UNLE.locked.x;
-            UNLE.dragTarget.y = UNLE.locked.y;
-        }
-
-        if (UNLE.shouldLock) {
-            UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.app.renderer.width / 2;
-            UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.app.renderer.height / 2;
-        }
-
-        UNLE.drawLines();
+        //UNLE.drawLines();
 
         requestAnimationFrame(UNLE.main);
     }
@@ -514,7 +427,6 @@ class UNLE {
         UNLE.DisplayDebug();
         // -
 
-        //console.log(window.scrollX)
 
         if (UNLE.edgesList != []) {
             UNLE.LayoutAlgorithm();
@@ -533,7 +445,9 @@ class UNLE {
     // |-------------------------|
 
     add_node(id = None, value = id, colour) {
-        UNLE.createNode(UNLE.randomX(), UNLE.randomY(), id, value, colour)
+        const x = UNLE.randomX()
+        const y = UNLE.randomY()
+        UNLE.createNode(x, y, id, value, colour)
         UNLE.nodesEdgeNum[id] = 0
     }
 
@@ -550,11 +464,16 @@ class UNLE {
         UNLE.edgesList.push([nodeID1, nodeID2, length])
         UNLE.nodesEdgeNum[nodeID1] += 1
         UNLE.nodesEdgeNum[nodeID2] += 1
-        
-        // Run this if v8 is used, otherwise do not run this line
-        if (UNLE.isChrome) UNLE.buildForces()
 
+        // Create nodesEdgeNumList
+        const nodesEdgeNumList = new Array(UNLE.NodesContainer.children.length)
+
+        for (let i = 0; i < nodesEdgeNumList.length; i++) {
+            nodesEdgeNumList[i] = UNLE.nodesEdgeNum[UNLE.NodesContainer.children[i].name]
+        }
+        
         const line = new PIXI.Sprite(UNLE.lineT);
+        line.width = UNLE.edgeWidth;
         UNLE.LinesContainer.addChild(line);
     }
 
