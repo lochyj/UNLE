@@ -17,6 +17,9 @@ class UNLE {
     static lineG = new PIXI.Graphics();
     static lineT;
 
+    static nodeG = new PIXI.Graphics();
+    static nodeT;
+
     static textOptions = {
         font: "bold 64px Roboto", // Set  style, size and font
         fill: '#FFFFFF', // Set fill color to blue
@@ -92,8 +95,13 @@ class UNLE {
         UNLE.lineG.beginFill(0xFFFFFF);
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
-
         UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
+
+        UNLE.nodeG.lineStyle(1, 0xffffff, 1);
+        UNLE.nodeG.beginFill(0x000000, 1);
+        UNLE.nodeG.drawCircle(0, 0, UNLE.nodeRadius);
+        UNLE.nodeG.endFill();
+        UNLE.nodeT = UNLE.app.renderer.generateTexture(UNLE.nodeG);
 
         UNLE.app.stage.eventMode = 'dynamic';
 
@@ -252,6 +260,8 @@ class UNLE {
     static createNode(xC, yC, id, text = id, colour) {
         if (colour == null)
             colour = UNLE.nodeColor;
+
+        /*
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
         nodeG.lineStyle(1, 0xffffff, 1);
@@ -269,7 +279,8 @@ class UNLE {
         }
 
         const nodeT = UNLE.app.renderer.generateTexture(nodeContainer);
-        const node = new PIXI.Sprite(nodeT);
+        */
+        const node = new PIXI.Sprite(UNLE.nodeT);
         node.anchor.set(0.5);
         node.name = id;
 
@@ -305,8 +316,7 @@ class UNLE {
 
         UNLE.attractWorker.onmessage = e => {
 
-            UNLE.attractForces = e.data[0]
-            UNLE.linesForces = e.data[1]
+            UNLE.attractForces = e.data
         }
 
         UNLE.repelWorker.onmessage = e => {
@@ -318,7 +328,6 @@ class UNLE {
         // IMplementing ostrich algorithm
         if (UNLE.attractForces[0][0] !== 0 && UNLE.repelForces[0][0] !== 0) {
             const nodes = UNLE.NodesContainer.children
-            const lines = UNLE.LinesContainer.children
 
             // Move each node
             for (let i = 0; i < nodes.length; i++) {
@@ -328,16 +337,6 @@ class UNLE {
                 const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
                 node.x += accel * (moveX / EdgeLength)
                 node.y += accel * (moveY / EdgeLength)
-            }
-
-            // Move lines
-            for (let i  = 0; i < UNLE.edgesList.length; i++) {
-                const line = lines[i];
-
-                line.x = UNLE.linesForces[i][0];
-                line.y = UNLE.linesForces[i][1];
-                line.height = UNLE.linesForces[i][2];
-                line.angle = UNLE.linesForces[i][3];
             }
             UNLE.isAttractReady = true
         }
@@ -417,7 +416,7 @@ class UNLE {
     static async main() {
         UNLE.LayoutAlgorithm();
 
-        //UNLE.drawLines();
+        UNLE.drawLines();
 
         requestAnimationFrame(UNLE.main);
     }
