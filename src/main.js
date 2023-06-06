@@ -49,7 +49,6 @@ class UNLE {
 
     static attractForces = [[0]];
     static repelForces = [[0]];
-    static linesForces;
 
     static generateNodePositionMatrix() {
         const nodes = UNLE.NodesContainer.children;
@@ -284,7 +283,7 @@ class UNLE {
 
     static fruchtermanReingoldWebWorker() {
 
-        const accel = 70
+        const accel = 1;
 
         if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0) {
 
@@ -306,7 +305,6 @@ class UNLE {
         UNLE.attractWorker.onmessage = e => {
 
             UNLE.attractForces = e.data[0]
-            UNLE.linesForces = e.data[1]
         }
 
         UNLE.repelWorker.onmessage = e => {
@@ -318,7 +316,6 @@ class UNLE {
         // IMplementing ostrich algorithm
         if (UNLE.attractForces[0][0] !== 0 && UNLE.repelForces[0][0] !== 0) {
             const nodes = UNLE.NodesContainer.children
-            const lines = UNLE.LinesContainer.children
 
             // Move each node
             for (let i = 0; i < nodes.length; i++) {
@@ -328,16 +325,6 @@ class UNLE {
                 const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
                 node.x += accel * (moveX / EdgeLength)
                 node.y += accel * (moveY / EdgeLength)
-            }
-
-            // Move lines
-            for (let i  = 0; i < UNLE.edgesList.length; i++) {
-                const line = lines[i];
-
-                line.x = UNLE.linesForces[i][0];
-                line.y = UNLE.linesForces[i][1];
-                line.height = UNLE.linesForces[i][2];
-                line.angle = UNLE.linesForces[i][3];
             }
             UNLE.isAttractReady = true
         }
@@ -351,6 +338,16 @@ class UNLE {
             UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.app.renderer.width / 2;
             UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.app.renderer.height / 2;
         }
+    }
+
+    static edgeExists(edges, source, target) {
+        for (var i = 0; i < edges.length; i++) {
+            var edge = edges[i];
+            if ((edge[0] === source && edge[1] === target) || (edge[0] === target && edge[1] === source)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     generateRandomGraph(graph, numEdges, numNodes) {
@@ -388,16 +385,6 @@ class UNLE {
         }
     }
 
-    static edgeExists(edges, source, target) {
-        for (var i = 0; i < edges.length; i++) {
-            var edge = edges[i];
-            if ((edge[0] === source && edge[1] === target) || (edge[0] === target && edge[1] === source)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     static kamadaKawai() {
         //TODO: implement
     }
@@ -417,7 +404,7 @@ class UNLE {
     static async main() {
         UNLE.LayoutAlgorithm();
 
-        //UNLE.drawLines();
+        UNLE.drawLines();
 
         requestAnimationFrame(UNLE.main);
     }
