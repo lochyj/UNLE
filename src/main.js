@@ -17,6 +17,9 @@ class UNLE {
     static lineG = new PIXI.Graphics();
     static lineT;
 
+    static nodeG = new PIXI.Graphics();
+    static nodeT;
+
     static textOptions = {
         font: "bold 64px Roboto", // Set  style, size and font
         fill: '#FFFFFF', // Set fill color to blue
@@ -91,8 +94,13 @@ class UNLE {
         UNLE.lineG.beginFill(0xFFFFFF);
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
-
         UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
+
+        UNLE.nodeG.lineStyle(1, 0xffffff, 1);
+        UNLE.nodeG.beginFill(0x000000, 1);
+        UNLE.nodeG.drawCircle(0, 0, UNLE.nodeRadius);
+        UNLE.nodeG.endFill();
+        UNLE.nodeT = UNLE.app.renderer.generateTexture(UNLE.nodeG);
 
         UNLE.app.stage.eventMode = 'dynamic';
 
@@ -251,6 +259,8 @@ class UNLE {
     static createNode(xC, yC, id, text = id, colour) {
         if (colour == null)
             colour = UNLE.nodeColor;
+
+        /*
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
         nodeG.lineStyle(1, 0xffffff, 1);
@@ -268,7 +278,8 @@ class UNLE {
         }
 
         const nodeT = UNLE.app.renderer.generateTexture(nodeContainer);
-        const node = new PIXI.Sprite(nodeT);
+        */
+        const node = new PIXI.Sprite(UNLE.nodeT);
         node.anchor.set(0.5);
         node.name = id;
 
@@ -283,7 +294,7 @@ class UNLE {
 
     static fruchtermanReingoldWebWorker() {
 
-        const accel = 1;
+        const accel = 40
 
         if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0) {
 
@@ -304,7 +315,7 @@ class UNLE {
 
         UNLE.attractWorker.onmessage = e => {
 
-            UNLE.attractForces = e.data[0]
+            UNLE.attractForces = e.data
         }
 
         UNLE.repelWorker.onmessage = e => {
@@ -313,10 +324,9 @@ class UNLE {
             UNLE.isRepelReady = true
         }
 
-        // IMplementing ostrich algorithm
         if (UNLE.attractForces[0][0] !== 0 && UNLE.repelForces[0][0] !== 0) {
             const nodes = UNLE.NodesContainer.children
-
+  
             // Move each node
             for (let i = 0; i < nodes.length; i++) {
                 const node = nodes[i]
@@ -326,7 +336,10 @@ class UNLE {
                 node.x += accel * (moveX / EdgeLength)
                 node.y += accel * (moveY / EdgeLength)
             }
+
             UNLE.isAttractReady = true
+
+            UNLE.drawLines();
         }
 
         if (UNLE.dragTarget != null) {
@@ -338,16 +351,6 @@ class UNLE {
             UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.app.renderer.width / 2;
             UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.app.renderer.height / 2;
         }
-    }
-
-    static edgeExists(edges, source, target) {
-        for (var i = 0; i < edges.length; i++) {
-            var edge = edges[i];
-            if ((edge[0] === source && edge[1] === target) || (edge[0] === target && edge[1] === source)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     generateRandomGraph(graph, numEdges, numNodes) {
@@ -385,6 +388,16 @@ class UNLE {
         }
     }
 
+    static edgeExists(edges, source, target) {
+        for (var i = 0; i < edges.length; i++) {
+            var edge = edges[i];
+            if ((edge[0] === source && edge[1] === target) || (edge[0] === target && edge[1] === source)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     static kamadaKawai() {
         //TODO: implement
     }
@@ -403,8 +416,6 @@ class UNLE {
 
     static async main() {
         UNLE.LayoutAlgorithm();
-
-        UNLE.drawLines();
 
         requestAnimationFrame(UNLE.main);
     }

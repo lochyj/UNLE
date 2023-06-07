@@ -12,7 +12,7 @@ onmessage = e => {
     let i = 0;
 
     let movement = Array(nodesLength)
-    for (let i = 0; i < nodesLength; i++) movement[i] = [0, 0]
+    for (i = 0; i < nodesLength; i++) movement[i] = [0, 0]
 
     // Calculate attractive forces along edges
     for (i = 0; i < edgesLength; i++) {
@@ -36,5 +36,5 @@ onmessage = e => {
         movement[targetIndex][1] -= y
     }
 
-    postMessage([movement])
+    postMessage(movement)
 }
