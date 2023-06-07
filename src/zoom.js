@@ -5,6 +5,7 @@
 
 "use strict"
 export default class zoom {
+
     constructor(container, app) {
         this.Container = container;
         this.app = app;
@@ -13,7 +14,9 @@ export default class zoom {
         this.handler = this.handler.bind(this);
         this.zoom = this.zoom.bind(this);
 
-        this.handler();
+        this.handler()
+
+        this.pan = true;
     }
 
     handler() {
@@ -32,8 +35,12 @@ export default class zoom {
             this.lastPos = null;
         }
 
+        canvas.onmouseleave = event => {
+            this.lastPos = null;
+        }
+
         canvas.onmousemove = event => {
-            if (this.lastPos) {
+            if (this.lastPos && this.pan) {
                 this.Container.x += (event.offsetX - this.lastPos.x);
                 this.Container.y += (event.offsetY - this.lastPos.y);
                 this.lastPos = {x: event.offsetX, y: event.offsetY};
@@ -64,5 +71,13 @@ export default class zoom {
         stage.y -= (newScreenPos.y-y) ;
         stage.scale.x = newScale.x;
         stage.scale.y = newScale.y;
+    }
+
+    enable_pan() {
+        this.pan = true;
+    }
+
+    disable_pan() {
+        this.pan = false;
     }
 }

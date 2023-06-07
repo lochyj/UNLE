@@ -294,7 +294,7 @@ class UNLE {
 
     static fruchtermanReingoldWebWorker() {
 
-        const accel = 40
+        const accel = 100
 
         if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0) {
 
@@ -332,9 +332,14 @@ class UNLE {
                 const node = nodes[i]
                 const moveX = UNLE.attractForces[i][0] + UNLE.repelForces[i][0]
                 const moveY = UNLE.attractForces[i][1] + UNLE.repelForces[i][1]
-                const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
-                node.x += accel * (moveX / EdgeLength)
-                node.y += accel * (moveY / EdgeLength)
+                //const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
+
+                const edgeNum = UNLE.nodesEdgeNum[node.name]
+
+                const EdgeLength = Math.max(Math.sqrt(moveX*moveX+moveY*moveY) / (accel * edgeNum), UNLE.k * edgeNum)
+
+                node.x += (moveX / EdgeLength)
+                node.y += (moveY / EdgeLength)
             }
 
             UNLE.isAttractReady = true
