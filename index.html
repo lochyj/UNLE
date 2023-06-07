@@ -2,8 +2,6 @@
 <html>
     <head>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-        <script data-require="jquery@*" data-semver="2.1.4" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-        <script data-require="jquery-mousewheel@*" data-semver="3.1.13" src="//cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
         <script src="./src/gpu-browser.js"></script>
     </head>
     <body>
@@ -21,12 +19,12 @@
             });
 
             // systematically generate a random graph where all nodes are connected, but not to themselves
-            ///*
-            let nodes = 100;
-            let edges = 100;
+            /*
+            let nodes = 1000;
+            let edges = 10000;
 
             graph.generateRandomGraph(graph, edges, nodes);
-            //*/
+            */
 
 
             /*
@@ -74,10 +72,12 @@
             */
 
             // generate a 3d grid like graph
-            /*
+            ///*
 
             //THIS REQUIRES A VERY POWERFUL CPU TO RUN!!!!
-            let nodes = 30;
+            let nodes = 16;
+
+            //let nodes = 3;
 
             for (let i = 0; i < nodes; i++) {
                 for (let j = 0; j < nodes; j++) {
@@ -102,7 +102,7 @@
                     }
                 }
             }
-            */
+            //*/
 
             // generate a 4d grid like graph
             /*
