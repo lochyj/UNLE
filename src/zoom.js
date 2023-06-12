@@ -27,19 +27,19 @@ export default class zoom {
 
         canvas.onwheel = this.zoom
 
-        canvas.onmousedown = event => {
+        canvas.onpointerdown = event => {
             this.lastPos = {x: event.offsetX, y: event.offsetY};
         }
 
-        canvas.onmouseup = event => {
+        canvas.onpointerup = event => {
             this.lastPos = null;
         }
 
-        canvas.onmouseleave = event => {
+        canvas.onpointerleave = event => {
             this.lastPos = null;
         }
 
-        canvas.onmousemove = event => {
+        canvas.onpointermove = event => {
             if (this.lastPos && this.pan) {
                 this.Container.x += (event.offsetX - this.lastPos.x);
                 this.Container.y += (event.offsetY - this.lastPos.y);

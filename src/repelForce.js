@@ -1,11 +1,11 @@
 "use strict"
 
-let k = 51.44
-
 onmessage = e => {
 
     const nodes = e.data
     const nodesLength = nodes.length
+
+    const k = 80
 
     let i = 0;
 

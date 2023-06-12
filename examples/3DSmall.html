@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script type="module">
+            import UNLE from '../src/main.js'
+
+            let graph = new UNLE({
+                "width": 1200,
+                "height": 900,
+                "canvas": document.getElementById("canvas"),
+                "show_id": false,
+                "node_radius": 10,
+                "node_color": 0x000000,
+                "edge_length": 100,
+                "edge_width": 5,
+            });
+
+            let nodes = 3;
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    for (let k = 0; k < nodes; k++) {
+                        graph.add_node(i + j * nodes + k * nodes * nodes);
+                    }
+                }
+            }
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    for (let k = 0; k < nodes; k++) {
+                        if (i > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i - 1 + j * nodes + k * nodes * nodes);
+                        }
+                        if (j > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i + (j - 1) * nodes + k * nodes * nodes);
+                        }
+                        if (k > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i + j * nodes + (k - 1) * nodes * nodes);
+                        }
+                    }
+                }
+            }
+        </script>
+    </body>
+</html>
