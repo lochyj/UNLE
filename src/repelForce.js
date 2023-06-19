@@ -5,7 +5,7 @@ onmessage = e => {
     const nodes = e.data
     const nodesLength = nodes.length
 
-    const k = 80
+    const k = 100 // Actual edge length
 
     let i = 0;
 

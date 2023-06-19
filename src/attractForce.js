@@ -7,7 +7,7 @@ onmessage = e => {
     const edges = e.data[1]
     const edgesLength = edges.length
 
-    const k = 80
+    const k = 100 // Actual edge length
 
     let i = 0;
 
