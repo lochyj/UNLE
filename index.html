@@ -1,209 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
     <head>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <link href=style.css rel=stylesheet>
+
+        <meta name=viewport content="width=device-width, initial-scale=1.0">
     </head>
+
     <body>
-        <div id="canvas"></div>
-        <script type="module">
-            import UNLE from './src/main.js'
+        <a href="https://github.com/rotaryViper/UNLE" class=Title>
+            UNLE<br>
+        </a>
 
-            let graph = new UNLE({
-                "canvas": document.getElementById("canvas"),
-                "show_id": false,
-                "node_radius": 10,
-                "node_color": 0x000000,
-                "edge_length": 100,
-                "edge_width": 5,
-            });
+        <c class=Intro>
+            Examples<br>
+            |<br>
+            |<br>
+            V
+        </c>
 
-            // systematically generate a random graph where all nodes are connected, but not to themselves
-            /*
-            let nodes = 1000;
-            let edges = 10000;
-
-            graph.generateRandomGraph(graph, edges, nodes);
-            */
-
-
-            /*
-            let nodes = 200;
-            let edges = 600;
-
-            for (let i = 0; i < nodes; i++) {
-                graph.add_node(i);
-            }
-
-            for (let i = 0; i < edges; i++) {
-                let a = Math.floor(Math.random() * nodes);
-                let b = Math.floor(Math.random() * nodes);
-                graph.add_edge(a, b);
-            }
-            */
-
-            // generate a grid like graph
-            /*
-            let nodes = 30;
-
-            for (let i = 0; i < nodes; i++) {
-                for (let j = 0; j < nodes; j++) {
-                    graph.add_node(i + j * nodes);
-                }
-            }
-
-            for (let i = 0; i < nodes; i++) {
-                for (let j = 0; j < nodes; j++) {
-                    if (i > 0) {
-                        graph.add_edge(i + j * nodes, i - 1 + j * nodes);
-                    }
-                    if (j > 0) {
-                        graph.add_edge(i + j * nodes, i + (j - 1) * nodes);
-                    }
-                }
-            }
-
-            // connect the corners of the grid to each other
-
-            //graph.add_edge(0, nodes - 1);
-            //graph.add_edge(nodes - 1, nodes * nodes - 1);
-            //graph.add_edge(nodes * nodes - 1, nodes * nodes - nodes);
-            //graph.add_edge(nodes * nodes - nodes, 0);
-            */
-
-            // generate a 3d grid like graph
-            ///*
-
-            //THIS REQUIRES A VERY POWERFUL CPU TO RUN!!!!
-            let nodes = 25;
-
-            //let nodes = 3;
-
-            for (let i = 0; i < nodes; i++) {
-                for (let j = 0; j < nodes; j++) {
-                    for (let k = 0; k < nodes; k++) {
-                        graph.add_node(i + j * nodes + k * nodes * nodes);
-                    }
-                }
-            }
-
-            for (let i = 0; i < nodes; i++) {
-                for (let j = 0; j < nodes; j++) {
-                    for (let k = 0; k < nodes; k++) {
-                        if (i > 0) {
-                            graph.add_edge(i + j * nodes + k * nodes * nodes, i - 1 + j * nodes + k * nodes * nodes);
-                        }
-                        if (j > 0) {
-                            graph.add_edge(i + j * nodes + k * nodes * nodes, i + (j - 1) * nodes + k * nodes * nodes);
-                        }
-                        if (k > 0) {
-                            graph.add_edge(i + j * nodes + k * nodes * nodes, i + j * nodes + (k - 1) * nodes * nodes);
-                        }
-                    }
-                }
-            }
-            //*/
-
-            /*
-
-            graph.add_node(0)
-
-            for (let i = 1; i < 100; i++) {
-                graph.add_node(i)
-                graph.add_edge(0, i)
-            }
-            */
-
-            /*
-           graph.add_node(1)
-           graph.add_node(2)
-           graph.add_edge(1,2)
-           */
-
-            // generate a 4d grid like graph
-            /*
-            let nodes = 5;
-
-            for (let i = 0; i < nodes; i++) {
-                for (let j = 0; j < nodes; j++) {
-                    for (let k = 0; k < nodes; k++) {
-                        for (let l = 0; l < nodes; l++) {
-                            graph.add_node(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes);
-                        }
-                    }
-                }
-            }
-
-            for (let i = 0; i < nodes; i++) {
-                for (let j = 0; j < nodes; j++) {
-                    for (let k = 0; k < nodes; k++) {
-                        for (let l = 0; l < nodes; l++) {
-                            if (i > 0) {
-                                graph.add_edge(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes, i - 1 + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes);
-                            }
-                            if (j > 0) {
-                                graph.add_edge(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes, i + (j - 1) * nodes + k * nodes * nodes + l * nodes * nodes * nodes);
-                            }
-                            if (k > 0) {
-                                graph.add_edge(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes, i + j * nodes + (k - 1) * nodes * nodes + l * nodes * nodes * nodes);
-                            }
-                            if (l > 0) {
-                                graph.add_edge(i + j * nodes + k * nodes * nodes + l * nodes * nodes * nodes, i + j * nodes + k * nodes * nodes + (l - 1) * nodes * nodes * nodes);
-                            }
-                        }
-                    }
-                }
-            }
-            */
-
-            // generate an interesting looking graph
-            /*
-            let nodes = 1000;
-
-            for (let i = 0; i < nodes; i++) {
-                graph.add_node(i);
-            }
-
-            // connect in a line
-
-            for (let i = 0; i < nodes - 1; i++) {
-                graph.add_edge(i, i + 1);
-            }
-
-            */
-
-            /*
-            var input = `
-                nodes: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-
-                1 -> 2
-                2 -> 3
-                3 -> 4
-                4 -> 1
-
-                1 -> 5
-                2 -> 6
-                3 -> 7
-                4 -> 8
-
-                5 -> 6
-                6 -> 7
-                7 -> 8
-                8 -> 5
-
-                5 -> 9
-                6 -> 10
-                7 -> 11
-                8 -> 12
-
-                9 -> 10
-                10 -> 11
-                11 -> 12
-                12 -> 9
-            `
-
-            graph.from_node_language(input)
-            */
-
-        </script>
+        <!--Top left square-->
+        <c class=Box>
+            <a href=./examples/1-2.html class=subBox>
+                <p class=subBoxTitle>1-2</p>
+                <img
+                    src=./examples/1-2.avif
+                    alt="1-2 Graph"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+            <a href=./examples/2D.html class=subBox>
+                <p class=subBoxTitle>Grid</p>
+                <img
+                    src=./examples/2D.avif
+                    alt="Grid"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+            <a href=./examples/3DBig.html class=subBox>
+                <p class=subBoxTitle>Big Cube</p>
+                <img
+                    src=./examples/3DBig.avif
+                    alt="Big cube"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+            <a href=./examples/3DSmall.html class=subBox>
+                <p class=subBoxTitle>Small Cube</p>
+                <img
+                    src=./examples/3DSmall.avif
+                    alt="Small cube"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+            <a href=./examples/4D.html class=subBox>
+                <p class=subBoxTitle>4D Shape</p>
+                <img
+                    src=./examples/4D.png
+                    alt="4D Shape"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+            <a href=./examples/Circle.html class=subBox>
+                <p class=subBoxTitle>Not actually a circle</p>
+                <img
+                    src=./examples/Circle.png
+                    alt="Not actually a circle"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+            <a href=./examples/Line.html class=subBox>
+                <p class=subBoxTitle>Line</p>
+                <img
+                    src=./examples/Line.avif
+                    alt="Line"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+            <a href=./examples/OG.html class=subBox>
+                <p class=subBoxTitle>Original UNLE Graph</p>
+                <img
+                    src=./examples/OG.avif
+                    alt="Original UNLE graph"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+            <a href=./examples/random.html class=subBox>
+                <p class=subBoxTitle>Random Graph</p>
+                <img
+                    src=./examples/random.avif
+                    alt="Random graph"
+                    decoding=async
+                    loading=lazy
+                    class="boxImage"
+                >
+            </a>
+        </c>
     </body>
 </html>

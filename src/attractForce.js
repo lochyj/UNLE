@@ -1,13 +1,13 @@
 "use strict"
 
-let k = 51.44
-
 onmessage = e => {
 
     const nodes = e.data[0]
     const nodesLength = nodes.length
     const edges = e.data[1]
     const edgesLength = edges.length
+
+    const k = 100 // Actual edge length
 
     let i = 0;
 

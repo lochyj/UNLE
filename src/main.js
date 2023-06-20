@@ -3,15 +3,10 @@
 import zoom from './zoom.js'
 
 class UNLE {
-    static app = new PIXI.Application({
-        resolution: 1,
-        autoDensity: true,
-        antialias: true,
-        backgroundColor: 0x0A0A0A
-    });
+    static app;
 
-    static attractWorker = new Worker('./src/attractForce.js')
-    static repelWorker = new Worker('./src/repelForce.js')
+    static attractWorker = new Worker('../src/attractForce.js')
+    static repelWorker = new Worker('../src/repelForce.js')
 
     //This is necessary to reuse the same texture for a simple line
     static lineG = new PIXI.Graphics();
@@ -44,9 +39,6 @@ class UNLE {
 
     static nodeNames = [];
 
-    static k = Math.sqrt(((UNLE.app.renderer.width * UNLE.app.renderer.height) / 160));
-
-
     static isAttractReady = true;
     static isRepelReady = true;
 
@@ -64,7 +56,6 @@ class UNLE {
     }
 
     constructor(data) {
-        data.canvas.appendChild(UNLE.app.view);
 
         UNLE.isDebug = false;
 
@@ -75,11 +66,26 @@ class UNLE {
             UNLE.isDebug = true;
         }
 
+        if (data.width != null) UNLE.width = data.width; else UNLE.width = 800;
+        if (data.height != null) UNLE.height = data.height; else UNLE.height = 600;
         if (data.show_id != null) UNLE.showID = data.show_id; else UNLE.showID = true;
         if (data.node_radius != null) UNLE.nodeRadius = data.node_radius; else UNLE.nodeRadius = 20;
         if (data.node_color != null) UNLE.nodeColor = data.node_color; else UNLE.nodeColor = 0x808080;
         if (data.edge_length != null) UNLE.edgeLength = data.edge_length / 10; else UNLE.edgeLength = 100 / 10;
         if (data.edge_width != null) UNLE.edgeWidth = data.edge_width; else UNLE.edgeWidth = 3;
+
+        UNLE.app = new PIXI.Application({
+            width: UNLE.width,
+            height: UNLE.height,
+            resolution: 1,
+            autoDensity: true,
+            antialias: true,
+            backgroundColor: 0x0A0A0A
+        });
+
+        data.canvas.appendChild(UNLE.app.view);
+
+        UNLE.k = Math.sqrt(((UNLE.width * UNLE.height) / 160))
 
         UNLE.init();
 
@@ -244,11 +250,11 @@ class UNLE {
     }
 
     static randomX() {
-        return Math.floor(Math.random() * UNLE.app.renderer.width);
+        return Math.floor(Math.random() * UNLE.width);
     }
 
     static randomY() {
-        return Math.floor(Math.random() * UNLE.app.renderer.height);
+        return Math.floor(Math.random() * UNLE.height);
     }
 
     static randomColour() {
@@ -287,14 +293,19 @@ class UNLE {
         node.on('pointerdown', UNLE.onDragStart, node);
 
         // Place in center of screen
-        node.x = xC + UNLE.app.renderer.width / 2;
-        node.y = yC + UNLE.app.renderer.height / 2;
+        node.x = xC + UNLE.width / 2;
+        node.y = yC + UNLE.height / 2;
         UNLE.NodesContainer.addChild(node);
     }
 
     static fruchtermanReingoldWebWorker() {
 
-        const accel = 100
+        //const k = Math.sqrt((UNLE.Container.width * UNLE.Container.height) / UNLE.NodesContainer.children.length)
+        const k = Math.sqrt((UNLE.width * UNLE.height) / UNLE.NodesContainer.children.length)
+
+        const accel = UNLE.edgeLength / 2
+
+        //console.log(UNLE.Container.scale.x)
 
         if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0) {
 
@@ -330,13 +341,38 @@ class UNLE {
             // Move each node
             for (let i = 0; i < nodes.length; i++) {
                 const node = nodes[i]
-                const moveX = UNLE.attractForces[i][0] + UNLE.repelForces[i][0]
-                const moveY = UNLE.attractForces[i][1] + UNLE.repelForces[i][1]
-                //const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
+                const moveX = (UNLE.attractForces[i][0] + UNLE.repelForces[i][0])
+                const moveY = (UNLE.attractForces[i][1] + UNLE.repelForces[i][1])
 
                 const edgeNum = UNLE.nodesEdgeNum[node.name]
 
-                const EdgeLength = Math.max(Math.sqrt(moveX*moveX+moveY*moveY) / (accel * edgeNum), UNLE.k * edgeNum)
+                const move = Math.sqrt(moveX*moveX+moveY*moveY)
+
+                // Far distancing vs close distancing
+                //const EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length), UNLE.edgeLength)
+                //const EdgeLength = edgeNum * Math.sqrt(move)
+                //const EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
+                //const EdgeLength = Math.min(edgeNum * Math.sqrt(move), edgeNum * UNLE.edgeLength * UNLE.edgeLength / 2)
+
+                let EdgeLength = 0
+
+                if (move > nodes.length/edgeNum + Math.sqrt(edgeNum)*UNLE.edgeLength) {
+                //if (move > edgeNum * Math.sqrt(nodes.length) * UNLE.edgeLength) {
+                    //EdgeLength = edgeNum * Math.sqrt(move) / accel
+                    //EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length + UNLE.edgeLength))
+                    EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length) + UNLE.edgeLength)
+                }
+                else {
+                    EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
+                    //EdgeLength = edgeNum * Math.sqrt(nodes.length) + UNLE.edgeLength
+                }
+
+
+                /*
+                if (i == 0) {
+                    console.log(move)
+                }
+                */
 
                 node.x += (moveX / EdgeLength)
                 node.y += (moveY / EdgeLength)
@@ -353,8 +389,8 @@ class UNLE {
         }
 
         if (UNLE.shouldLock) {
-            UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.app.renderer.width / 2;
-            UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.app.renderer.height / 2;
+            UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.width / 2;
+            UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.height / 2;
         }
     }
 
@@ -452,6 +488,7 @@ class UNLE {
         const y = UNLE.randomY()
         UNLE.createNode(x, y, id, value, colour)
         UNLE.nodesEdgeNum[id] = 0
+        UNLE.k = Math.sqrt((UNLE.width * UNLE.height) / UNLE.nodesEdgeNum.length)
     }
 
     // TODO: if node1 and node2 are the same then the edge should be implemented in a special way... add this.
