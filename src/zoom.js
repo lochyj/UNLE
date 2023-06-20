@@ -74,11 +74,11 @@ export default class zoom {
                 if (zoom.prevDiff > 0) {
                     if (curDiff > zoom.prevDiff) {
                         // The distance between the two pointers has increased
-                        this.zoom(event, 0.99)
+                        this.zoom(event, 0.95)
                     }
                     if (curDiff < zoom.prevDiff) {
                         // The distance between the two pointers has decreased
-                        this.zoom(event, 1.02)
+                        this.zoom(event, 1.05)
                     }
                 }
 
