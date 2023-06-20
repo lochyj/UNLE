@@ -6,13 +6,18 @@
 "use strict"
 export default class zoom {
 
+    // Global vars to cache event state
+    static evCache = new Array();
+    static prevDiff = -1;
+
     constructor(container, app) {
         this.Container = container;
         this.app = app;
 
         // This is required...
         this.handler = this.handler.bind(this);
-        this.zoom = this.zoom.bind(this);
+        this.zoomOut = this.zoomOut.bind(this);
+        this.zoomIn = this.zoomIn.bind(this);
 
         this.handler()
 
@@ -25,18 +30,31 @@ export default class zoom {
 
         const canvas = this.app.view
 
-        canvas.onwheel = this.zoom
+        canvas.onwheel = event => {
+            
+            if (event.deltaY > 0) {
+                this.zoomOut(event)
+            }
+            else {
+                this.zoomIn(event)
+            }
+            
+        }
 
         canvas.onpointerdown = event => {
             this.lastPos = {x: event.offsetX, y: event.offsetY};
+            zoom.evCache.push(event);
         }
 
         canvas.onpointerup = event => {
             this.lastPos = null;
+            zoom.remove_event(event);
+            
         }
 
         canvas.onpointerleave = event => {
             this.lastPos = null;
+            zoom.remove_event(event);
         }
 
         canvas.onpointermove = event => {
@@ -45,20 +63,83 @@ export default class zoom {
                 this.Container.y += (event.offsetY - this.lastPos.y);
                 this.lastPos = {x: event.offsetX, y: event.offsetY};
             }
+
+            // This static implements a 2-pointer horizontal pinch/zoom gesture. 
+            //
+            // If the distance between the two pointers has increased (zoom in), 
+            // the taget canvasement's background is changed to "pink" and if the 
+            // distance is decreasing (zoom out), the color is changed to "lightblue".
+            //
+            // This static sets the target canvasement's border to "dashed" to visually
+            // indicate the pointer's target received a move event.
+            
+            // Find this event in the cache and update its record with this event
+            for (var i = 0; i < zoom.evCache.length; i++) {
+                if (event.pointerId == zoom.evCache[i].pointerId) {
+                    zoom.evCache[i] = event;
+                break;
+                }
+            }
+
+
+            // If two pointers are down, check for pinch gestures
+            if (zoom.evCache.length == 2) {
+                // Calculate the distance between the two pointers
+                var curDiff = Math.sqrt(Math.pow(zoom.evCache[1].clientX - zoom.evCache[0].clientX, 2) + Math.pow(zoom.evCache[1].clientY - zoom.evCache[0].clientY, 2));
+
+                if (zoom.prevDiff > 0) {
+                    if (curDiff > zoom.prevDiff) {
+                        // The distance between the two pointers has increased
+                        console.log("Zoom Out")
+                        this.zoomOut(event)
+                    }
+                    if (curDiff < zoom.prevDiff) {
+                        // The distance between the two pointers has decreased
+                        console.log("Zoom In")
+                        this.zoomIn(event)
+                    }
+                }
+
+                // Cache the distance for the next move event 
+                zoom.prevDiff = curDiff;
+            }
         }
     }
 
-    zoom(e) {
+    zoomIn(e) {
         e.preventDefault() // Prevents window from scrolling when zooming in UNLE
 
-        const accel = .8
+        const acccanvas = .8
         const event = window.event
 
-        let s = -e.deltaY * accel
         const x = event.offsetX
         const y = event.offsetY
         const stage = this.Container;
-        s = (s > 0 ? 1.5 : 0.75) ** accel;
+        const s = 1.5 ** acccanvas;
+        var worldPos = {x: (x - stage.x) / stage.scale.x, y: (y - stage.y)/stage.scale.y};
+        // Limit minimum and maximum size
+        const minSize = 100
+        const maxSize = .02
+        var newScale = {x: Math.max(Math.min(stage.scale.x * s, minSize), maxSize), y: Math.max(Math.min(stage.scale.y * s, minSize), maxSize)};
+
+        var newScreenPos = {x: (worldPos.x ) * newScale.x + stage.x, y: (worldPos.y) * newScale.y + stage.y};
+
+        stage.x -= (newScreenPos.x-x) ;
+        stage.y -= (newScreenPos.y-y) ;
+        stage.scale.x = newScale.x;
+        stage.scale.y = newScale.y;
+    }
+
+    zoomOut(e) {
+        e.preventDefault() // Prevents window from scrolling when zooming in UNLE
+
+        const acccanvas = .8
+        const event = window.event
+
+        const x = event.offsetX
+        const y = event.offsetY
+        const stage = this.Container;
+        const s = 0.75 ** acccanvas;
         var worldPos = {x: (x - stage.x) / stage.scale.x, y: (y - stage.y)/stage.scale.y};
         // Limit minimum and maximum size
         const minSize = 100
@@ -79,5 +160,15 @@ export default class zoom {
 
     disable_pan() {
         this.pan = false;
+    }
+
+    static remove_event(ev) {
+    // Remove this event from the target's cache
+    for (var i = 0; i < zoom.evCache.length; i++) {
+        if (zoom.evCache[i].pointerId == ev.pointerId) {
+            zoom.evCache.splice(i, 1);
+            break;
+        }
+    }
     }
 }

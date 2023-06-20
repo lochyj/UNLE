@@ -356,7 +356,7 @@ class UNLE {
 
                 let EdgeLength = 0
 
-                if (move > nodes.length/edgeNum + edgeNum*UNLE.edgeLength) {
+                if (move > nodes.length/edgeNum + Math.sqrt(edgeNum)*UNLE.edgeLength) {
                 //if (move > edgeNum * Math.sqrt(nodes.length) * UNLE.edgeLength) {
                     //EdgeLength = edgeNum * Math.sqrt(move) / accel
                     //EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length + UNLE.edgeLength))
