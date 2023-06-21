@@ -223,10 +223,12 @@ class UNLE {
     }
 
     // Implement this fully later -> directed edges and weighted edges to go...
-    static drawLines() {
+    static async drawLines() {
         const nodes = UNLE.NodesContainer.children;
         const edges = UNLE.edgesListIndexes;
         const lines = UNLE.LinesContainer.children;
+
+        //console.log(lines[0].angle)
 
         for (let i = 0; i < edges.length; i++) {
             const edge = edges[i]
@@ -301,11 +303,9 @@ class UNLE {
     static fruchtermanReingoldWebWorker() {
 
         //const k = Math.sqrt((UNLE.Container.width * UNLE.Container.height) / UNLE.NodesContainer.children.length)
-        const k = Math.sqrt((UNLE.width * UNLE.height) / UNLE.NodesContainer.children.length)
+        //const k = Math.sqrt((UNLE.width * UNLE.height) / UNLE.NodesContainer.children.length)
 
         const accel = UNLE.edgeLength / 2
-
-        //console.log(UNLE.Container.scale.x)
 
         if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0) {
 
@@ -336,51 +336,37 @@ class UNLE {
         }
 
         if (UNLE.attractForces[0][0] !== 0 && UNLE.repelForces[0][0] !== 0) {
-            const nodes = UNLE.NodesContainer.children
-  
-            // Move each node
-            for (let i = 0; i < nodes.length; i++) {
-                const node = nodes[i]
-                const moveX = (UNLE.attractForces[i][0] + UNLE.repelForces[i][0])
-                const moveY = (UNLE.attractForces[i][1] + UNLE.repelForces[i][1])
+            setTimeout(() => {
+                const nodes = UNLE.NodesContainer.children
+    
+                // Move each node
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i]
+                    const moveX = (UNLE.attractForces[i][0] + UNLE.repelForces[i][0])
+                    const moveY = (UNLE.attractForces[i][1] + UNLE.repelForces[i][1])
 
-                const edgeNum = UNLE.nodesEdgeNum[node.name]
+                    const edgeNum = UNLE.nodesEdgeNum[node.name]
 
-                const move = Math.sqrt(moveX*moveX+moveY*moveY)
+                    const move = Math.sqrt(moveX*moveX+moveY*moveY)
 
-                // Far distancing vs close distancing
-                //const EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length), UNLE.edgeLength)
-                //const EdgeLength = edgeNum * Math.sqrt(move)
-                //const EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
-                //const EdgeLength = Math.min(edgeNum * Math.sqrt(move), edgeNum * UNLE.edgeLength * UNLE.edgeLength / 2)
+                    // Far distancing vs close distancing
+                    let EdgeLength = 0
 
-                let EdgeLength = 0
+                    if (move > nodes.length/edgeNum + Math.sqrt(edgeNum)*UNLE.edgeLength) {
+                        EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length) + UNLE.edgeLength)
+                    }
+                    else {
+                        EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
+                    }
 
-                if (move > nodes.length/edgeNum + Math.sqrt(edgeNum)*UNLE.edgeLength) {
-                //if (move > edgeNum * Math.sqrt(nodes.length) * UNLE.edgeLength) {
-                    //EdgeLength = edgeNum * Math.sqrt(move) / accel
-                    //EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length + UNLE.edgeLength))
-                    EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length) + UNLE.edgeLength)
-                }
-                else {
-                    EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
-                    //EdgeLength = edgeNum * Math.sqrt(nodes.length) + UNLE.edgeLength
+                    node.x += (moveX / EdgeLength)
+                    node.y += (moveY / EdgeLength)
                 }
 
-
-                /*
-                if (i == 0) {
-                    console.log(move)
-                }
-                */
-
-                node.x += (moveX / EdgeLength)
-                node.y += (moveY / EdgeLength)
-            }
+                UNLE.drawLines()
+            }, 0)
 
             UNLE.isAttractReady = true
-
-            UNLE.drawLines();
         }
 
         if (UNLE.dragTarget != null) {
@@ -456,7 +442,10 @@ class UNLE {
     }
 
     static async main() {
-        UNLE.LayoutAlgorithm();
+        setTimeout(() => {
+            UNLE.LayoutAlgorithm();
+        },0
+        )
 
         requestAnimationFrame(UNLE.main);
     }
