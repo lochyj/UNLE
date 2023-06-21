@@ -19,17 +19,17 @@
                 "edge_width": 5,
             });
 
-            let nodes = 1000;
+            let nodes = 20;
 
-            for (let i = 0; i < nodes; i++) {
-                graph.add_node(i);
+            graph.add_node(0)
+
+            let i = 1
+
+            for (i = 1; i < nodes; i++) {
+                graph.add_node(i)
+                graph.add_edge(i-1, i)
             }
-
-            // connect in a line
-
-            for (let i = 0; i < nodes - 1; i++) {
-                graph.add_edge(i, i + 1);
-            }
+            graph.add_edge(0, i-1)
 
             graph.showTime()
         </script>
