@@ -90,10 +90,12 @@ class UNLE {
         UNLE.init();
 
         // Main loop
+        /*
         if (!UNLE.isDebug)
             UNLE.main();
         else
             UNLE.debugMain();
+        */
     }
 
     static init() {
@@ -336,35 +338,33 @@ class UNLE {
         }
 
         if (UNLE.attractForces[0][0] !== 0 && UNLE.repelForces[0][0] !== 0) {
-            setTimeout(() => {
-                const nodes = UNLE.NodesContainer.children
-    
-                // Move each node
-                for (let i = 0; i < nodes.length; i++) {
-                    const node = nodes[i]
-                    const moveX = (UNLE.attractForces[i][0] + UNLE.repelForces[i][0])
-                    const moveY = (UNLE.attractForces[i][1] + UNLE.repelForces[i][1])
+            const nodes = UNLE.NodesContainer.children
 
-                    const edgeNum = UNLE.nodesEdgeNum[node.name]
+            // Move each node
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i]
+                const moveX = (UNLE.attractForces[i][0] + UNLE.repelForces[i][0])
+                const moveY = (UNLE.attractForces[i][1] + UNLE.repelForces[i][1])
 
-                    const move = Math.sqrt(moveX*moveX+moveY*moveY)
+                const edgeNum = UNLE.nodesEdgeNum[node.name]
 
-                    // Far distancing vs close distancing
-                    let EdgeLength = 0
+                const move = Math.sqrt(moveX*moveX+moveY*moveY)
 
-                    if (move > nodes.length/edgeNum + Math.sqrt(edgeNum)*UNLE.edgeLength) {
-                        EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length) + UNLE.edgeLength)
-                    }
-                    else {
-                        EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
-                    }
+                // Far distancing vs close distancing
+                let EdgeLength = 0
 
-                    node.x += (moveX / EdgeLength)
-                    node.y += (moveY / EdgeLength)
+                if (move > nodes.length/edgeNum + Math.sqrt(edgeNum)*UNLE.edgeLength) {
+                    EdgeLength = edgeNum * Math.max(Math.sqrt(move) / accel, Math.sqrt(nodes.length) + UNLE.edgeLength)
+                }
+                else {
+                    EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
                 }
 
-                UNLE.drawLines()
-            }, 0)
+                node.x += (moveX / EdgeLength)
+                node.y += (moveY / EdgeLength)
+            }
+
+            UNLE.drawLines()
 
             UNLE.isAttractReady = true
         }
@@ -442,10 +442,7 @@ class UNLE {
     }
 
     static async main() {
-        setTimeout(() => {
-            UNLE.LayoutAlgorithm();
-        },0
-        )
+        UNLE.LayoutAlgorithm();
 
         requestAnimationFrame(UNLE.main);
     }
@@ -495,11 +492,13 @@ class UNLE {
         UNLE.nodesEdgeNum[nodeID2] += 1
 
         // Create nodesEdgeNumList
+        /*
         const nodesEdgeNumList = new Array(UNLE.NodesContainer.children.length)
 
         for (let i = 0; i < nodesEdgeNumList.length; i++) {
             nodesEdgeNumList[i] = UNLE.nodesEdgeNum[UNLE.NodesContainer.children[i].name]
         }
+        */
         
         const line = new PIXI.Sprite(UNLE.lineT);
         line.width = UNLE.edgeWidth;
@@ -591,6 +590,10 @@ class UNLE {
             UNLE.nodesEdgeNum[edge[0]] += 1
             UNLE.nodesEdgeNum[edge[1]] += 1
         });
+    }
+
+    showTime() {
+        UNLE.main()
     }
 }
 
