@@ -264,12 +264,10 @@ class UNLE {
         const nodes = UNLE.NodesContainer.children;
         const edges = UNLE.edgesList;
 
-        //TODO: Move this to a global variable that is updated every now and then
         const width = UNLE.app.renderer.width;
         const height = UNLE.app.renderer.height;
         //
 
-        //TODO: add UNLE.edgeLength
         const k = Math.sqrt(((width * height) / 160)); // Optimal distance between nodes
 
         // Leave this at 2 for the moment. This is the optimal speed...
@@ -324,22 +322,6 @@ class UNLE {
             //node.x = Math.min(Math.max(node.x, 0), width);
             //node.y = Math.min(Math.max(node.y, 0), height);
         })
-    }
-
-    static kamadaKawai() {
-        //TODO: implement
-    }
-
-    // TODO: implement
-    static dragLayout() {
-        /* When you drag a node it can cause issues when using the layout algorithms so,
-         * to prevent this we should implement a simple algorithm that just moves the node to the cursor
-         * and pulls the graph behind it.
-         * */
-    }
-
-    static cool(t) {
-        return t - 0.1;
     }
 
     static sleep(ms) {

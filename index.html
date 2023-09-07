@@ -24,7 +24,7 @@
                 "edge_length": 100
             });
             
-            /*let edgeLen = 100;
+            let edgeLen = 100;
             graph.add_node(0);
             for (let i = 1; i < 10; i++) {
                 graph.add_node(i);
@@ -49,22 +49,8 @@
 
             graph.remove_node("removed!");
 
-            graph.remove_edge(17, 13)*/
+            graph.remove_edge(17, 13)
 
-            // randomly generate a graph with 100 nodes and 200 edges
-
-            let nodes = 100;
-            let edges = 500;
-
-            for (let i = 0; i < nodes; i++) {
-                graph.add_node(i);
-            }
-
-            for (let i = 0; i < edges; i++) {
-                let a = Math.floor(Math.random() * nodes);
-                let b = Math.floor(Math.random() * nodes);
-                graph.add_edge(a, b);
-            }
 
         </script>
     </body>
