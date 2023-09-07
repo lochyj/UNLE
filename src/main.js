@@ -49,8 +49,6 @@ class UNLE {
         if (data.node_color != null) UNLE.nodeColor = data.node_color; else UNLE.nodeColor = 0x808080;
         if (data.edge_length != null) UNLE.edgeLength = data.edge_length / 10; else UNLE.edgeLength = 100 / 10;
 
-        UNLE.LayoutAlgorithm = UNLE.fruchtermanReingold;
-
         UNLE.init();
 
         // Main loop
@@ -110,25 +108,6 @@ class UNLE {
 
         UNLE.EdgesInfo = EdgesInfo;
         UNLE.NodesInfo = NodesInfo;
-    }
-
-    static debug() {
-        UNLE.NodesInfo.innerHTML = '';
-        UNLE.EdgesInfo.innerHTML = '';
-
-        UNLE.NodesContainer.children.forEach(node => {
-            const nodeInfo = document.createElement('div');
-            nodeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px; border-radius: 5px;';
-            nodeInfo.innerHTML = `Node ${node.name} <br> x: ${node.x} <br> y: ${node.y} <br> edges: ${UNLE.nodesEdgeNum[node.name]}`;
-            UNLE.NodesInfo.appendChild(nodeInfo);
-        });
-
-        UNLE.edgesList.forEach(edge => {
-            const edgeInfo = document.createElement('div');
-            edgeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px; border-radius: 5px;';
-            edgeInfo.innerHTML = `Edge ${edge[0]} -> ${edge[1]} <br> length: ${edge[2]}`;
-            UNLE.EdgesInfo.appendChild(edgeInfo);
-        });
     }
 
     static onDragMove(event) {
@@ -227,7 +206,6 @@ class UNLE {
         return Math.floor(Math.random() * 0xFFFFFF);
     }
 
-    //TODO: experiment with not using sprite for higher quality
     static createNode(xC, yC, id, text = id) {
 
         // Replaced graphics with sprite for faster rendering
@@ -260,68 +238,15 @@ class UNLE {
         UNLE.NodesContainer.addChild(node);
     }
 
-    static fruchtermanReingold() {
+    static layoutEngine() {
         const nodes = UNLE.NodesContainer.children;
         const edges = UNLE.edgesList;
 
         const width = UNLE.app.renderer.width;
         const height = UNLE.app.renderer.height;
-        //
 
-        const k = Math.sqrt(((width * height) / 160)); // Optimal distance between nodes
+        // Place here...
 
-        // Leave this at 2 for the moment. This is the optimal speed...
-        const accel = 2
-
-        // Calculate repulsive forces between nodes
-        nodes.forEach(node1 => {
-            // Initialize forces
-            node1.dx = 0;
-            node1.dy = 0;
-            nodes.forEach(node2 => {
-                if (node1 !== node2) {
-                    const dx = node1.x - node2.x;
-                    const dy = node1.y - node2.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance <= 0)
-                        return;
-                    const force = k * k / distance;
-                    node1.dx += dx / distance * force;
-                    node1.dy += dy / distance * force;
-                }
-            })
-        })
-
-        // Calculate attractive forces along edges
-        edges.forEach(edge => {
-            const source = UNLE.NodesContainer.getChildByName(edge[0]);
-            const target = UNLE.NodesContainer.getChildByName(edge[1]);
-
-            const dx = target.x - source.x;
-            const dy = target.y - source.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance <= 0)
-                return;
-            const force = distance * distance / k;
-            const x = dx / distance * force;
-            const y = dy / distance * force;
-            source.dx += x;
-            source.dy += y;
-            target.dx -= x;
-            target.dy -= y;
-
-        });
-
-        // Move each node
-        nodes.forEach(node => {
-            // TODO: rename this to something more cohesive...
-            const EdgeLength = nodes.length * UNLE.nodesEdgeNum[node.name];
-            node.x += accel * (node.dx / EdgeLength);
-            node.y += accel * (node.dy / EdgeLength);
-            // TODO: fix the constraints
-            //node.x = Math.min(Math.max(node.x, 0), width);
-            //node.y = Math.min(Math.max(node.y, 0), height);
-        })
     }
 
     static sleep(ms) {
@@ -336,7 +261,7 @@ class UNLE {
         //console.log(window.scrollX)
 
         if (UNLE.edgesList != []) {
-            UNLE.LayoutAlgorithm();
+            UNLE.layoutEngine();
         }
 
         if (UNLE.dragTarget != null) {
