@@ -235,7 +235,7 @@ class UNLE {
         const height = UNLE.app.renderer.height;
 
         const area = width * height;
-        const K = Math.sqrt(area / 160); // 160 is the optimal value for the number of nodes for the algorithm
+        const K = Math.sqrt(area / 160);
 
         for (var i = 0; i < nodes.length; i++) {
             const v = nodes[i];
@@ -290,8 +290,8 @@ class UNLE {
             const v = nodes[i];
 
             const EdgeLength = nodes.length * UNLE.nodesEdgeNum[v.name];
-            v.x += 20 * (v.dx / EdgeLength);
-            v.y += 20 * (v.dy / EdgeLength);
+            v.x += (Math.sqrt(nodes.length) / UNLE.nodesEdgeNum[v.name] ) * (v.dx / EdgeLength);
+            v.y += (Math.sqrt(nodes.length) / UNLE.nodesEdgeNum[v.name] ) * (v.dy / EdgeLength);
 
         }
 
