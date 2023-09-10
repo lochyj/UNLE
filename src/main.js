@@ -7,7 +7,7 @@ class UNLE {
         resolution: 1,
         autoDensity: true,
         antialias: true,
-        backgroundColor: 0x0A0A0A
+        backgroundColor: 0xFFFFFF
     });
 
     //This is necessary to reuse the same texture for a simple line
@@ -56,7 +56,7 @@ class UNLE {
     }
 
     static init() {
-        UNLE.lineG.beginFill(0xFFFFFF);
+        UNLE.lineG.beginFill(0x000000);
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
 
@@ -67,6 +67,9 @@ class UNLE {
         UNLE.app.stage.hitArea = UNLE.app.screen;
         UNLE.app.stage.on('pointerup', UNLE.onDragEnd);
         UNLE.app.stage.on('pointerupoutside', UNLE.onDragEnd);
+
+        // Make the stage white
+
 
         UNLE.Container = new PIXI.Container();
         UNLE.LinesContainer = new PIXI.Container();
@@ -80,34 +83,6 @@ class UNLE {
         UNLE.app.stage.addChild(UNLE.Container);
 
         UNLE.zoom = new zoom(UNLE.Container, UNLE.app);
-    }
-
-    // Empty function to override in the constructor if needed that gets called within the main loop
-    static DisplayDebug(){}
-
-    static initDebug() {
-        const debugDiv = UNLE.DebugDiv;
-
-        const NodesDetails = document.createElement('details');
-        const NodeTitle = document.createElement('summary');
-        NodeTitle.innerText = 'Nodes'
-        NodesDetails.appendChild(NodeTitle);
-
-        const NodesInfo = document.createElement('div');
-        NodesDetails.appendChild(NodesInfo);
-
-        const EdgesDetails = document.createElement('details');
-        const EdgeTitle = document.createElement('summary');
-        EdgeTitle.innerText = 'Edges'
-        EdgesDetails.appendChild(EdgeTitle);
-        const EdgesInfo = document.createElement('div');
-        EdgesDetails.appendChild(EdgesInfo);
-
-        debugDiv.appendChild(NodesDetails);
-        debugDiv.appendChild(EdgesDetails);
-
-        UNLE.EdgesInfo = EdgesInfo;
-        UNLE.NodesInfo = NodesInfo;
     }
 
     static onDragMove(event) {
@@ -203,14 +178,14 @@ class UNLE {
     }
 
     static randomColour() {
-        return Math.floor(Math.random() * 0xFFFFFF);
+        return Math.floor(Math.random() * 0x000000);
     }
 
     static createNode(xC, yC, id, text = id) {
 
         // Replaced graphics with sprite for faster rendering
         const nodeG = new PIXI.Graphics();
-        nodeG.lineStyle(1, 0xffffff, 1);
+        nodeG.lineStyle(1, 0x000000, 1);
         nodeG.beginFill(UNLE.nodeColor, 1);
         nodeG.drawCircle(0, 0, UNLE.nodeRadius);
         nodeG.endFill();
@@ -245,7 +220,9 @@ class UNLE {
         const width = UNLE.app.renderer.width;
         const height = UNLE.app.renderer.height;
 
-        // Place here...
+        const attraction_index = UNLE.nodesEdgeNum;
+
+
 
     }
 
