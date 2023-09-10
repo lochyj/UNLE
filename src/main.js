@@ -6,7 +6,7 @@ class UNLE {
     static app = new PIXI.Application({
         resolution: 1,
         autoDensity: true,
-        antialias: true,
+        antialias: false,
         backgroundColor: 0xFFFFFF
     });
 
@@ -213,6 +213,20 @@ class UNLE {
         UNLE.NodesContainer.addChild(node);
     }
 
+    static fa(x, K) {
+        return (x * x) / K;
+    }
+
+    static fr(x, K) {
+        return (K * K) / x;
+    }
+
+    static t = 100;
+
+    static cool() {
+        UNLE.t = UNLE.t * 0.99;
+    }
+
     static layoutEngine() {
         const nodes = UNLE.NodesContainer.children;
         const edges = UNLE.edgesList;
@@ -222,7 +236,68 @@ class UNLE {
 
         const attraction_index = UNLE.nodesEdgeNum;
 
+        const area = width * height;
+        const K = Math.sqrt(area / Math.abs(nodes.length));
 
+        const fa = UNLE.fa;
+        const fr = UNLE.fr;
+
+        for (var i = 0; i < nodes.length; i++) {
+            const v = nodes[i];
+
+            v.dx = 0;
+            v.dy = 0;
+
+            for (var j = 0; j < nodes.length; j++) {
+                if (i == j)
+                    continue;
+
+                const u = nodes[j];
+
+                const dx = v.x - u.x;
+                const dy = v.y - u.y;
+
+                const d = Math.sqrt(dx * dx + dy * dy);
+
+                const f = fr(d, K) / d;
+
+                v.dx += dx * f;
+                v.dy += dy * f;
+            }
+        }
+
+        for (var i = 0; i < edges.length; i++) {
+            const e = edges[i];
+
+            const ev = UNLE.NodesContainer.getChildByName(e[0]);
+            const eu = UNLE.NodesContainer.getChildByName(e[1]);
+
+            const delta = {
+                x: ev.x - eu.x,
+                y: ev.y - eu.y
+            }
+
+
+            ev.dx = ev.dx - (delta.x / Math.abs(delta.x)) * fa(Math.abs(delta.x), K);
+            ev.dy = ev.dy - (delta.y / Math.abs(delta.y)) * fa(Math.abs(delta.y), K);
+
+            eu.dx = eu.dx + (delta.x / Math.abs(delta.x)) * fa(Math.abs(delta.x), K);
+            eu.dy = eu.dy + (delta.y / Math.abs(delta.y)) * fa(Math.abs(delta.y), K);
+
+        }
+
+        for (var i = 0; i < nodes.length; i++) {
+            const v = nodes[i];
+
+            v.x = v.x + (v.dx * Math.abs(v.dx)) * Math.min(v.dx, UNLE.t);
+            v.y = v.y + (v.dy * Math.abs(v.dy)) * Math.min(v.dy, UNLE.t);
+
+            v.x = Math.min(width / 2, Math.max(-width / 2, v.x));
+            v.y = Math.min(height / 2, Math.max(-height / 2, v.y));
+
+        }
+
+        UNLE.cool();
 
     }
 
@@ -231,11 +306,6 @@ class UNLE {
     }
 
     static async main() {
-        // This might slow us down even when we don't need to debug...
-        UNLE.DisplayDebug();
-        // -
-
-        //console.log(window.scrollX)
 
         if (UNLE.edgesList != []) {
             UNLE.layoutEngine();
@@ -247,9 +317,6 @@ class UNLE {
         }
 
         if (UNLE.shouldLock) {
-            // get centre of screen
-
-
             UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.app.renderer.width / 2;
             UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.app.renderer.height / 2;
         }

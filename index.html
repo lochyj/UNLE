@@ -10,46 +10,42 @@
         <script type="module">
             import UNLE from './src/main.js'
 
-            // "canvas" << required,
-            // "show_id" -> either true or false,
-            // "node_radius" -> any positive integer,
-            // "node_color" -> any HEX colour expressed such as 0x000000 for example,
-            // "edge_length" -> any positive integer
-
             let graph = new UNLE({
+                "width": 1200,
+                "height": 900,
                 "canvas": document.getElementById("canvas"),
                 "show_id": false,
-                "node_radius": 7,
+                "node_radius": 10,
                 "node_color": 0x000000,
-                "edge_length": 100
+                "edge_length": 100,
+                "edge_width": 5,
             });
-            
-            let edgeLen = 100;
-            graph.add_node(0);
-            for (let i = 1; i < 10; i++) {
-                graph.add_node(i);
-                graph.add_edge(0, i ,edgeLen);
+
+            let nodes = 10;
+
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    for (let k = 0; k < nodes; k++) {
+                        graph.add_node(i + j * nodes + k * nodes * nodes);
+                    }
+                }
             }
 
-            graph.add_node("Yes");
-            graph.add_edge(4, "Yes", edgeLen);
-
-            for (let i = 10; i < 19; i++) {
-                graph.add_node(i);
-                graph.add_edge("Yes", i ,edgeLen);
+            for (let i = 0; i < nodes; i++) {
+                for (let j = 0; j < nodes; j++) {
+                    for (let k = 0; k < nodes; k++) {
+                        if (i > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i - 1 + j * nodes + k * nodes * nodes);
+                        }
+                        if (j > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i + (j - 1) * nodes + k * nodes * nodes);
+                        }
+                        if (k > 0) {
+                            graph.add_edge(i + j * nodes + k * nodes * nodes, i + j * nodes + (k - 1) * nodes * nodes);
+                        }
+                    }
+                }
             }
-
-            graph.add_edge(5, 15, edgeLen);
-            graph.add_edge(7, 12, edgeLen);
-
-            graph.add_edge(17, 13, edgeLen);
-
-            graph.add_node("removed!");
-            graph.add_edge("removed!", 5, edgeLen);
-
-            graph.remove_node("removed!");
-
-            graph.remove_edge(17, 13)
 
 
         </script>
