@@ -234,13 +234,8 @@ class UNLE {
         const width = UNLE.app.renderer.width;
         const height = UNLE.app.renderer.height;
 
-        const attraction_index = UNLE.nodesEdgeNum;
-
         const area = width * height;
-        const K = Math.sqrt(area / Math.abs(nodes.length));
-
-        const fa = UNLE.fa;
-        const fr = UNLE.fr;
+        const K = Math.sqrt(area / 160); // 160 is the optimal value for the number of nodes for the algorithm
 
         for (var i = 0; i < nodes.length; i++) {
             const v = nodes[i];
@@ -256,13 +251,16 @@ class UNLE {
 
                 const dx = v.x - u.x;
                 const dy = v.y - u.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance <= 0)
+                    continue;
 
-                const d = Math.sqrt(dx * dx + dy * dy);
+                const force = K * K / distance;
+                const x = dx / distance * force;
+                const y = dy / distance * force;
 
-                const f = fr(d, K) / d;
-
-                v.dx += dx * f;
-                v.dy += dy * f;
+                v.dx += x;
+                v.dy += y;
             }
         }
 
@@ -272,32 +270,30 @@ class UNLE {
             const ev = UNLE.NodesContainer.getChildByName(e[0]);
             const eu = UNLE.NodesContainer.getChildByName(e[1]);
 
-            const delta = {
-                x: ev.x - eu.x,
-                y: ev.y - eu.y
-            }
+            const dx = ev.x - eu.x;
+            const dy = ev.y - eu.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance <= 0)
+                continue;
+            const force = distance * distance / K;
+            const x = dx / distance * force;
+            const y = dy / distance * force;
 
+            ev.dx -= x;
+            ev.dy -= y;
 
-            ev.dx = ev.dx - (delta.x / Math.abs(delta.x)) * fa(Math.abs(delta.x), K);
-            ev.dy = ev.dy - (delta.y / Math.abs(delta.y)) * fa(Math.abs(delta.y), K);
-
-            eu.dx = eu.dx + (delta.x / Math.abs(delta.x)) * fa(Math.abs(delta.x), K);
-            eu.dy = eu.dy + (delta.y / Math.abs(delta.y)) * fa(Math.abs(delta.y), K);
-
+            eu.dx += x;
+            eu.dy += y;
         }
 
         for (var i = 0; i < nodes.length; i++) {
             const v = nodes[i];
 
-            v.x = v.x + (v.dx * Math.abs(v.dx)) * Math.min(v.dx, UNLE.t);
-            v.y = v.y + (v.dy * Math.abs(v.dy)) * Math.min(v.dy, UNLE.t);
-
-            v.x = Math.min(width / 2, Math.max(-width / 2, v.x));
-            v.y = Math.min(height / 2, Math.max(-height / 2, v.y));
+            const EdgeLength = nodes.length * UNLE.nodesEdgeNum[v.name];
+            v.x += 20 * (v.dx / EdgeLength);
+            v.y += 20 * (v.dy / EdgeLength);
 
         }
-
-        UNLE.cool();
 
     }
 
