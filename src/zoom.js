@@ -30,7 +30,7 @@ export default class zoom {
         const canvas = this.app.view
 
         canvas.onwheel = event => {
-            
+
             if (event.deltaY > 0) {
                 this.zoom(event, 0.75)
             }
@@ -47,7 +47,7 @@ export default class zoom {
         canvas.onpointerup = event => {
             this.lastPos = null;
             zoom.remove_event(event);
-            
+
         }
 
         canvas.onpointerleave = event => {
@@ -82,7 +82,7 @@ export default class zoom {
                     }
                 }
 
-                // Cache the distance for the next move event 
+                // Cache the distance for the next move event
                 zoom.prevDiff = curDiff;
             }
 
@@ -109,8 +109,8 @@ export default class zoom {
         const s = sens ** acccanvas;
         var worldPos = {x: (x - stage.x) / stage.scale.x, y: (y - stage.y)/stage.scale.y};
         // Limit minimum and maximum size
-        const minSize = 100
-        const maxSize = .02
+        const minSize = Number.MAX_SAFE_INTEGER
+        const maxSize = Number.MIN_SAFE_INTEGER
         var newScale = {x: Math.max(Math.min(stage.scale.x * s, minSize), maxSize), y: Math.max(Math.min(stage.scale.y * s, minSize), maxSize)};
 
         var newScreenPos = {x: (worldPos.x ) * newScale.x + stage.x, y: (worldPos.y) * newScale.y + stage.y};

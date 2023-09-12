@@ -8,7 +8,7 @@ onmessage = e => {
     const edgesLength = edges.length
     const nodesEdgeNum = e.data[2]
 
-    const k = 100 / Math.sqrt(nodesLength) // Actual edge length
+    const k = 1000 / (nodesLength - 1) // Actual edge length
 
     const accel = 2
 
@@ -32,17 +32,6 @@ onmessage = e => {
         if (distance == 0)
             continue
 
-        /*
-        const a = Math.sqrt(nodesEdgeNum[i])
-
-        //const force = Math.sqrt(distance * k)/ k;
-        const x = a * dx + ((a*(dx)**3)/source[0]);
-        const y = a * dy + ((a*(dy)**3)/source[1]);
-
-        if (x == Infinity) console.log("Infinity at x")
-        if (y == Infinity) console.log("Infinity at y")
-        */
-
         const force = -(k / (distance + (k / accel))) + accel;
         const x = dx * force;
         const y = dy * force;
@@ -55,29 +44,5 @@ onmessage = e => {
         movement[targetIndex][1] += y;
     }
 
-/*
-    for (var i = 0; i < edges.length; i++) {
-            const e = edges[i];
-
-            const ev = UNLE.NodesContainer.getChildByName(e[0]);
-            const eu = UNLE.NodesContainer.getChildByName(e[1]);
-
-            const dx = ev.x - eu.x;
-            const dy = ev.y - eu.y;
-
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance <= 0)
-                continue;
-            const force = distance * distance / K;
-            const x = dx / distance * force;
-            const y = dy / distance * force;
-
-            ev.dx -= x;
-            ev.dy -= y;
-
-            eu.dx += x;
-            eu.dy += y;
-        }
-*/
     postMessage(movement)
 }
