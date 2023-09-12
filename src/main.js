@@ -340,26 +340,7 @@ class UNLE {
 				// Far distancing vs close distancing
                 let EdgeLength = 0
 
-				/*
-                if (move > nodes.length/edgeNum + Math.sqrt(edgeNum)*UNLE.edgeLength) {
-					EdgeLength = edgeNum * Math.max(Math.sqrt(move) / 100, Math.sqrt(nodes.length) + UNLE.edgeLength)
-                    //EdgeLength = edgeNum * (Math.sqrt(nodes.length) + UNLE.edgeLength)
-                    //EdgeLength = Math.sqrt((edgeNum) * nodes.length * UNLE.edgeLength)
-                }
-                else if (move > node.length * UNLE.edgeLength * edgeNum) {
-                    EdgeLength = Math.sqrt(nodes.length) * edgeNum;
-                } else {
-					EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
-				}
-
-				//EdgeLength = Math.sqrt(nodes.length) * edgeNum;
-
-				//const x = moveX / EdgeLength
-				//const y = moveY / EdgeLength
-
-				*/
-
-				EdgeLength = Math.sqrt(nodes.length) * Math.sqrt(edgeNum * 10);
+				EdgeLength = Math.sqrt(nodes.length) + edgeNum * edgeNum;
 
 				const x = moveX / EdgeLength
 				const y = moveY / EdgeLength
@@ -368,26 +349,6 @@ class UNLE {
 				if (Math.abs(x) == Infinity || Math.abs(y) == Infinity) return;
 				node.x += x
 				node.y += y
-				//*/
-
-
-
-
-				/*
-				// Far distancing vs close distancing
-                let EdgeLength = 0
-
-                if (move > nodes.length/edgeNum + Math.sqrt(edgeNum)*UNLE.edgeLength) {
-                    //EdgeLength = edgeNum * (Math.sqrt(nodes.length) + UNLE.edgeLength)
-                    EdgeLength = Math.sqrt((edgeNum) * nodes.length * UNLE.edgeLength)
-                }
-                else {
-                    EdgeLength = edgeNum * UNLE.edgeLength * UNLE.edgeLength
-                }
-
-                node.x += (moveX / EdgeLength)
-                node.y += (moveY / EdgeLength)
-                */
             }
 
             UNLE.isAttractReady = true
