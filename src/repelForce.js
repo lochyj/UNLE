@@ -11,8 +11,9 @@ onmessage = e => {
 
     let i = 0;
 
-    let movement = Array(nodesLength);
-    for (i = 0; i < nodesLength; i++) movement[i] = [0, 0];
+    let movement = Array(nodesLength).fill().map(
+        () => Array(2).fill(0)
+    )
 
     // Calculate repulsive forces between nodes
     for (i = 0; i < nodesLength; i++) {
@@ -23,16 +24,12 @@ onmessage = e => {
 
             const dx = node1[0] - node2[0];
             const dy = node1[1] - node2[1];
-            const distance = Math.sqrt(Math.abs(dx * dx + dy * dy));
-            if (distance <= 0)
-				continue;
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
 			const force = k / (distance + (k / accel));
-			const x = dx * force;
-			const y = dy * force;
 
-			movement[i][0] += x
-			movement[i][1] += y
+			movement[i][0] += dx * force;
+			movement[i][1] += dy * force;
         }
     }
     postMessage(movement)

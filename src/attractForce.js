@@ -6,17 +6,17 @@ onmessage = e => {
     const nodesLength = nodes.length
     const edges = e.data[1]
     const edgesLength = edges.length
-    const nodesEdgeNum = e.data[2]
+    //const nodesEdgeNum = e.data[2]
 
-    const k = 1000 / (nodesLength - 1) // Actual edge length
+    const k = 1 / (nodesLength - 1) // Actual edge length
 
-    const accel = 2
+    const accel = nodesLength < 500 ? 2 : 5
 
     let i = 0;
 
-    let movement = Array(nodesLength)
-    for (i = 0; i < nodesLength; i++) movement[i] = [0, 0]
-
+    let movement = Array(nodesLength).fill().map(
+        () => Array(2).fill(0)
+    )
     // Calculate attractive forces along edges
     for (i = 0; i < edgesLength; i++) {
         const edge = edges[i]
@@ -28,9 +28,7 @@ onmessage = e => {
         const dx = source[0] - target[0]
         const dy = source[1] - target[1]
 
-        const distance = Math.sqrt(Math.abs(dx * dx + dy * dy))
-        if (distance == 0)
-            continue
+        const distance = Math.sqrt(dx * dx + dy * dy)
 
         const force = -(k / (distance + (k / accel))) + accel;
         const x = dx * force;
