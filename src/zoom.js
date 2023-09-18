@@ -119,6 +119,14 @@ export default class zoom {
         stage.y -= (newScreenPos.y-y) ;
         stage.scale.x = newScale.x;
         stage.scale.y = newScale.y;
+
+
+        // Cull nodes when scale is less than 0.2
+		if (this.Container.scale.x < 0.2) {
+			this.Container.children[1].visible = false;
+		} else {
+			this.Container.children[1].visible = true;
+		}
     }
 
     enable_pan() {
