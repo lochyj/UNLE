@@ -7,7 +7,7 @@ onmessage = e => {
 
     const k = 1000 / (nodesLength - 1) // Actual edge length
 
-    const accel = 2
+    const a = 2
 
     let i = 0;
 
@@ -24,9 +24,9 @@ onmessage = e => {
 
             const dx = node1[0] - node2[0];
             const dy = node1[1] - node2[1];
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const d = Math.sqrt(dx * dx + dy * dy);
 
-			const force = k / (distance + (k / accel));
+			const force = a * k / (a * d + k);
 
 			movement[i][0] += dx * force;
 			movement[i][1] += dy * force;
