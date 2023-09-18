@@ -6,11 +6,10 @@ onmessage = e => {
     const nodesLength = nodes.length
     const edges = e.data[1]
     const edgesLength = edges.length
-    //const nodesEdgeNum = e.data[2]
 
-    const k = 1 / (nodesLength - 1) // Actual edge length
+    const k = 1 / (nodesLength - 1)
 
-    const a = nodesLength < 500 ? 2 : 5
+    const a = nodesLength < 500 ? 2 : 4
 
     let i = 0;
 

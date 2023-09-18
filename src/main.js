@@ -392,6 +392,12 @@ class UNLE {
             var sourceNodeId = Math.floor(Math.random() * numNodes) + 1;
             var targetNodeId = Math.floor(Math.random() * numNodes) + 1;
 
+            if (sourceNodeId !== targetNodeId && graph.edges == undefined) {
+                graph.add_edge(sourceNodeId, targetNodeId);
+                remainingEdges--;
+                continue
+            }
+
             // Avoid self-loops and duplicate edges
             if (sourceNodeId !== targetNodeId && !UNLE.edgeExists(graph.edges, sourceNodeId, targetNodeId)) {
                 graph.add_edge(sourceNodeId, targetNodeId);
