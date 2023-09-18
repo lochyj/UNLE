@@ -9,27 +9,32 @@ onmessage = e => {
 
     const a = 2
 
-    let i = 0;
+    let i, j = 0;
 
-    let movement = Array(nodesLength).fill().map(
-        () => Array(2).fill(0)
-    )
+    let movement = new Float32Array(nodesLength)
+    for (i = 0; i < movement.length; i++) {
+		movement[i] = 0
+	}
 
     // Calculate repulsive forces between nodes
-    for (i = 0; i < nodesLength; i++) {
-        const node1 = nodes[i];
-        for (let j = 0; j < nodesLength; j++) {
+    for (i = 0; i < nodesLength; i+=2) {
 
-            const node2 = nodes[j];
+        for (j = 0; j < nodesLength; j+=2) {
 
-            const dx = node1[0] - node2[0];
-            const dy = node1[1] - node2[1];
+			if (i == j) continue;
+
+            const dx = nodes[i] - nodes[j];
+            const dy = nodes[i + 1] - nodes[j + 1];
+
             const d = Math.sqrt(dx * dx + dy * dy);
 
 			const force = a * k / (a * d + k);
 
-			movement[i][0] += dx * force;
-			movement[i][1] += dy * force;
+			const x = dx * force;
+			const y = dy * force
+
+			movement[i] += x;
+            movement[i + 1] += y;
         }
     }
     postMessage(movement)

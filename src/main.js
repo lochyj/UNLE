@@ -50,9 +50,10 @@ class UNLE {
     static generateNodePositionMatrix() {
         const nodes = UNLE.NodesContainer.children;
         const length = nodes.length;
-        const matrices = Array(length);
+        const matrices = new Float32Array(length*2);
         for (let i = 0; i < length; i++) {
-            matrices[i] = [nodes[i].x,nodes[i].y]
+            matrices[i*2] = nodes[i].x
+            matrices[i*2+1] = nodes[i].y
         };
         return matrices;
     }
@@ -76,14 +77,19 @@ class UNLE {
         if (data.edge_length != null) UNLE.edgeLength = data.edge_length / 10; else UNLE.edgeLength = 100 / 10;
         if (data.edge_width != null) UNLE.edgeWidth = data.edge_width; else UNLE.edgeWidth = 3;
 
-        console.log(data.canvas) // This line reminds firefox that data.canvas is in fact a canvas
+        PIXI.Program.defaultFragmentPrecision=PIXI.PRECISION.LOW;
+        PIXI.Program.defaultVertexPrecision=PIXI.PRECISION.LOW;
 
-        const ctx = data.canvas.getContext("webgl2",{
+        const gl = data.canvas.getContext("webgl2",{
 		  antialias:false,
 		  alpha:false,
 		  stencil:false,
 		  powerPreference: 'high-performance'
 		})
+
+		// Could improve performance
+		gl.disable(gl.DITHER)
+		gl.disable(gl.BLEND)
 
         UNLE.app = new PIXI.Application({
             width: UNLE.width,
@@ -94,7 +100,7 @@ class UNLE {
             clearBeforeRender: false,
             backgroundColor: 0x0A0A0A,
             view: data.canvas,
-            context: ctx
+            context: gl
         });
 
         //data.canvas.appendChild(UNLE.app.view);
@@ -146,6 +152,9 @@ class UNLE {
         UNLE.LayoutAlgorithm = UNLE.fruchtermanReingoldWebWorker;
 
         UNLE.LinesContainer.interactiveChildren = false;
+
+        UNLE.NodesContainer.visible = false
+        UNLE.LinesContainer.visible = false
     }
 
     // Empty function to override in the constructor if needed that gets called within the main loop
@@ -302,14 +311,38 @@ class UNLE {
         if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0 && (UNLE.isAttractReady || UNLE.isRepelReady)) {
 			const nodes = UNLE.generateNodePositionMatrix();
 
-			if (UNLE.isAttractReady) {
-				UNLE.attractWorker.postMessage([nodes, UNLE.edgesListIndexes, UNLE.nodesEdgeNum])
-				UNLE.isAttractReady = false
-			}
-
 			if (UNLE.isRepelReady) {
 				UNLE.repelWorker.postMessage(nodes)
 				UNLE.isRepelReady = false
+			}
+
+			if (UNLE.isAttractReady) {
+				UNLE.attractWorker.postMessage([nodes, UNLE.edgesListIndexes, UNLE.nodesEdgeNum])
+				UNLE.isAttractReady = false
+
+				// Integrating line drawing into frutchterman reingold for that 1% performance improvement
+				const edges = UNLE.edgesListIndexes;
+				const lines = UNLE.LinesContainer.children;
+
+				for (let i = 0; i < edges.length; i++) {
+					const edge = edges[i]
+
+					const x1 = nodes[edge[0]*2];
+					const y1 = nodes[edge[0]*2+1];
+					const x2 = nodes[edge[1]*2];
+					const y2 = nodes[edge[1]*2+1];
+
+					const line = lines[i];
+
+					const dx = x2 - x1;
+					const dy = y2 - y1;
+					line.x = x2;
+					line.y = y2;
+					line.height = Math.sqrt((dx * dx) + (dy * dy));
+					line.width = UNLE.edgeWidth;
+
+					line.rotation = - Math.atan2(dx, dy) + Math.PI; // rotation uses radians, angle uses degrees
+				}
 			}
         }
 
@@ -330,25 +363,20 @@ class UNLE {
             // Move each node
             for (let i = 0; i < nodes.length; i++) {
                 const node = nodes[i]
-                const moveX = UNLE.attractForces[i][0] + UNLE.repelForces[i][0]
-                const moveY = UNLE.attractForces[i][1] + UNLE.repelForces[i][1]
+                const i2 = i*2
+
+				const moveX = UNLE.repelForces[i2]
+				- UNLE.attractForces[i2];
+
+				const moveY = UNLE.repelForces[i2 + 1]
+				- UNLE.attractForces[i2 + 1];
 
                 const edgeNum = UNLE.nodesEdgeNum[node.name]
 
-                const move = Math.sqrt(moveX*moveX+moveY*moveY)
+                const EdgeLength = Math.sqrt(nodes.length) + edgeNum * edgeNum;
 
-				// Far distancing vs close distancing
-                let EdgeLength = 0
-
-				EdgeLength = Math.sqrt(nodes.length) + edgeNum * edgeNum;
-
-				const x = moveX / EdgeLength
-				const y = moveY / EdgeLength
-
-
-				if (Math.abs(x) == Infinity || Math.abs(y) == Infinity) return;
-				node.x += x
-				node.y += y
+				node.x += moveX / EdgeLength
+				node.y += moveY / EdgeLength
             }
 
             UNLE.isAttractReady = true
@@ -435,7 +463,7 @@ class UNLE {
     static async main() {
         UNLE.LayoutAlgorithm();
 
-        UNLE.drawLines();
+        //UNLE.drawLines();
 
         requestAnimationFrame(UNLE.main);
     }
@@ -587,6 +615,8 @@ class UNLE {
 
     showTime() {
         UNLE.main()
+        UNLE.NodesContainer.visible = true
+        UNLE.LinesContainer.visible = true
     }
 }
 
