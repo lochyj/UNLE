@@ -235,7 +235,10 @@ class UNLE {
         const height = UNLE.app.renderer.height;
 
         const area = width * height;
+
         const K = Math.sqrt(area / 160);
+
+        const a = 2
 
         for (var i = 0; i < nodes.length; i++) {
             const v = nodes[i];
@@ -244,20 +247,17 @@ class UNLE {
             v.dy = 0;
 
             for (var j = 0; j < nodes.length; j++) {
-                if (i == j)
-                    continue;
 
                 const u = nodes[j];
 
                 const dx = v.x - u.x;
                 const dy = v.y - u.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance <= 0)
-                    continue;
+                const d = Math.sqrt(dx * dx + dy * dy);
 
-                const force = K * K / distance;
-                const x = dx / distance * force;
-                const y = dy / distance * force;
+                const force = a * K / (a * d + K);
+
+                const x = dx / d * force;
+                const y = dx / d * force;
 
                 v.dx += x;
                 v.dy += y;
@@ -272,12 +272,11 @@ class UNLE {
 
             const dx = ev.x - eu.x;
             const dy = ev.y - eu.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance <= 0)
-                continue;
-            const force = distance * distance / K;
-            const x = dx / distance * force;
-            const y = dy / distance * force;
+            const d = Math.sqrt(dx * dx + dy * dy);
+
+            const force = (a * a * d) / (a * d + K);
+            const x = dx * force;
+            const y = dy * force;
 
             ev.dx -= x;
             ev.dy -= y;
@@ -287,11 +286,26 @@ class UNLE {
         }
 
         for (var i = 0; i < nodes.length; i++) {
-            const v = nodes[i];
+            const node = nodes[i]
+            const moveX = node.dx
+            const moveY = node.dy
 
-            const EdgeLength = nodes.length * UNLE.nodesEdgeNum[v.name];
-            v.x += (Math.sqrt(nodes.length) / UNLE.nodesEdgeNum[v.name] ) * (v.dx / EdgeLength);
-            v.y += (Math.sqrt(nodes.length) / UNLE.nodesEdgeNum[v.name] ) * (v.dy / EdgeLength);
+            const edgeNum = UNLE.nodesEdgeNum[node.name]
+
+            const move = Math.sqrt(moveX*moveX+moveY*moveY)
+
+            // Far distancing vs close distancing
+            let EdgeLength = 0
+
+            EdgeLength = Math.sqrt(nodes.length) + edgeNum * edgeNum;
+
+            const x = moveX / EdgeLength
+            const y = moveY / EdgeLength
+
+
+            if (Math.abs(x) == Infinity || Math.abs(y) == Infinity) return;
+            node.x += x
+            node.y += y
 
         }
 
