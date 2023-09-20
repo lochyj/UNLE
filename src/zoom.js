@@ -138,12 +138,12 @@ export default class zoom {
     }
 
     static remove_event(ev) {
-    // Remove this event from the target's cache
-    for (var i = 0; i < zoom.evCache.length; i++) {
-        if (zoom.evCache[i].pointerId == ev.pointerId) {
-            zoom.evCache.splice(i, 1);
-            break;
+        // Remove this event from the target's cache
+        for (var i = 0; i < zoom.evCache.length; i++) {
+            if (zoom.evCache[i].pointerId == ev.pointerId) {
+                zoom.evCache.splice(i, 1);
+                break;
+            }
         }
-    }
     }
 }
