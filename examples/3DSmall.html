@@ -14,7 +14,7 @@
                 "canvas": document.getElementById("canvas"),
                 "show_id": false,
                 "node_radius": 10,
-                "node_color": 0x000000,
+                "node_color": 'red',
                 "edge_length": 100,
                 "edge_width": 5,
             });
@@ -46,6 +46,23 @@
             }
 
             graph.showTime()
+
+            //console.log(graph.nodes())
+
+            graph.nodes()[0].tint = 'blue'
+            graph.nodes()[1].tint = 'yellow'
+
+            graph.nodes()[20].tint = 'green'
+
+            nodes = graph.nodes()
+
+            //console.log(nodes[0])
+
+            graph.remove_edge(1, 0)
+
+            //console.log(graph.adjacent_nodes(nodes[20])[0].name)
+
+            graph.remove_node(nodes[1])
         </script>
     </body>
 </html>
