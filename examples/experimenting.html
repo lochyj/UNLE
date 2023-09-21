@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing UNLE</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        import { UNLE } from "../src/main.mjs"
+
+        const graph = new UNLE({
+            width: 500,
+            height: 500,
+            canvas: document.getElementById("canvas")
+        })
+
+        graph.add_node("node_1")
+        graph.add_node("node_2")
+
+        graph.add_edge("node_1", "node_2")
+
+        if (graph.get_node("node_1").has_neighbor("node_2")) {
+            console.log("This should always return true...")
+        }
+
+    </script>
+</body>
+</html>
