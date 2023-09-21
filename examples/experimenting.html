@@ -26,6 +26,14 @@
             console.log("This should always return true...")
         }
 
+        // traverse(<node from>, <node to>, <animation time in ms>)
+        graph.traverse("node_1", "node_2", 120)
+
+        graph.seen("node_1") // False because we havent seen it yet...
+
+        graph.view("node_1")
+
+        graph.seen("node_1") // True
     </script>
 </body>
 </html>
