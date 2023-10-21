@@ -247,10 +247,8 @@ class UNLE {
                 const dx = v.x - u.x;
                 const dy = v.y - u.y;
 
-                //TODO
 
-                //v.dx += 0.1;
-                //v.dy += 0.1;
+
             }
         }
 
@@ -261,11 +259,18 @@ class UNLE {
             const ev = UNLE.NodesContainer.getChildByName(e[0]);
             const eu = UNLE.NodesContainer.getChildByName(e[1]);
 
-            //ev.dx -= 0.01;
-            //ev.dy -= 0.01;
+            var distance = Math.sqrt((ev.x - eu.x) * (ev.x - eu.x) + (ev.y - eu.y) * (ev.y - eu.y));
 
-            //eu.dx += 0.01;
-            //eu.dy += 0.01;
+            var val = -0.0001 * ((distance - 100) * (distance - 100) * (distance - 100)); // 1/100^2 * (x - 100)^3
+            val = Math.max(0, Math.min(val, 200))
+            val = val - 100
+
+            ev.dx += val * (ev.x - eu.x) / distance;
+            ev.dy += val * (ev.y - eu.y) / distance;
+
+            eu.dx += val * (eu.x - ev.x) / distance;
+            eu.dy += val * (eu.y - ev.y) / distance;
+
         }
 
         for (var i = 0; i < nodes.length; i++) {
