@@ -213,18 +213,24 @@ class UNLE {
         UNLE.NodesContainer.addChild(node);
     }
 
-    static fa(x, K) {
-        return (x * x) / K;
-    }
+    static mid = (a, b) => [(a[0] + b[0])/2, (a[1] + b[1])/2];
 
-    static fr(x, K) {
-        return (K * K) / x;
-    }
+    // Get the absolute value of the magnitude of the vector. -> ||a||
+    static absMag = (a) => Math.abs(Math.sqrt( a[0] * a[0] + a[1] * a[1]));
 
-    static t = 100;
+    static f(d, p, midpoint) {
+        d /= 2
+        
+        const pmx = p[0] - midpoint[0]
+        const pmy = p[1] - midpoint[1]
 
-    static cool() {
-        UNLE.t = UNLE.t * 0.99;
+        const v = UNLE.absMag([pmx, pmy])
+
+        const x = midpoint[0] + (pmx / v) * d;
+        const y = midpoint[1] + (pmy / v) * d;
+
+        return [x, y]
+
     }
 
     static layoutEngine() {
@@ -259,17 +265,21 @@ class UNLE {
             const ev = UNLE.NodesContainer.getChildByName(e[0]);
             const eu = UNLE.NodesContainer.getChildByName(e[1]);
 
-            var distance = Math.sqrt((ev.x - eu.x) * (ev.x - eu.x) + (ev.y - eu.y) * (ev.y - eu.y));
+            const mp = UNLE.mid([ev.x, ev.y], [eu.x, eu.y]);
 
-            var val = -0.0001 * ((distance - 100) * (distance - 100) * (distance - 100)); // 1/100^2 * (x - 100)^3
-            val = Math.max(0, Math.min(val, 200))
-            val = val - 100
+            console.log(mp)
 
-            ev.dx += val * (ev.x - eu.x) / distance;
-            ev.dy += val * (ev.y - eu.y) / distance;
+            let a = UNLE.f(edgeLength, [ev.x, ev.y], mp);
+            let b = UNLE.f(edgeLength, [eu.x, eu.y], mp);
 
-            eu.dx += val * (eu.x - ev.x) / distance;
-            eu.dy += val * (eu.y - ev.y) / distance;
+            console.log(a, b)
+
+            ev.x = a[0]
+            ev.y = a[1]
+
+            eu.x = b[0]
+            eu.y = b[1]
+
 
         }
 
