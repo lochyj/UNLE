@@ -215,6 +215,8 @@ class UNLE {
 
     static mid = (a, b) => [(a[0] + b[0])/2, (a[1] + b[1])/2];
 
+    static mag = (a) => Math.sqrt( a[0] * a[0] + a[1] * a[1]);
+
     // Get the absolute value of the magnitude of the vector. -> ||a||
     static absMag = (a) => Math.abs(Math.sqrt( a[0] * a[0] + a[1] * a[1]));
 
@@ -237,15 +239,12 @@ class UNLE {
         const nodes = UNLE.NodesContainer.children;
         const edges = UNLE.edgesList;
 
-        const edgeLength = 100
+        const N = 100
+        const K = 150
 
         // Repulsion
         for (var i = 0; i < nodes.length; i++) {
             const v = nodes[i];
-
-            v.dx = 0;
-            v.dy = 0;
-
             for (var j = 0; j < nodes.length; j++) {
 
                 const u = nodes[j];
@@ -253,7 +252,10 @@ class UNLE {
                 const dx = v.x - u.x;
                 const dy = v.y - u.y;
 
+                const dmagnitude = UNLE.mag([dx, dy])
 
+                v.dx = v.x + (dx/dmagnitude) * ((K*K)/dmagnitude)
+                v.dy = v.y + (dy/dmagnitude) * ((K*K)/dmagnitude)
 
             }
         }
@@ -269,8 +271,8 @@ class UNLE {
 
             console.log(mp)
 
-            let a = UNLE.f(edgeLength, [ev.x, ev.y], mp);
-            let b = UNLE.f(edgeLength, [eu.x, eu.y], mp);
+            let a = UNLE.f(N, [ev.x, ev.y], mp);
+            let b = UNLE.f(N, [eu.x, eu.y], mp);
 
             console.log(a, b)
 
