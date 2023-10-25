@@ -215,10 +215,8 @@ class UNLE {
 
     static mid = (a, b) => [(a[0] + b[0])/2, (a[1] + b[1])/2];
 
+    // Get the magnitude of the vector. -> ||a||
     static mag = (a) => Math.sqrt( a[0] * a[0] + a[1] * a[1]);
-
-    // Get the absolute value of the magnitude of the vector. -> ||a||
-    static absMag = (a) => Math.abs(Math.sqrt( a[0] * a[0] + a[1] * a[1]));
 
     static f(d, p, midpoint) {
         d /= 2
@@ -226,7 +224,7 @@ class UNLE {
         const pmx = p[0] - midpoint[0]
         const pmy = p[1] - midpoint[1]
 
-        const v = UNLE.absMag([pmx, pmy])
+        const v = UNLE.mag([pmx, pmy])
 
         const x = midpoint[0] + (pmx / v) * d;
         const y = midpoint[1] + (pmy / v) * d;
@@ -245,17 +243,42 @@ class UNLE {
         // Repulsion
         for (var i = 0; i < nodes.length; i++) {
             const v = nodes[i];
+            v.dx = 0
+            v.dy = 0
             for (var j = 0; j < nodes.length; j++) {
 
                 const u = nodes[j];
 
-                const dx = v.x - u.x;
-                const dy = v.y - u.y;
+                var dx = v.x - u.x;
+                var dy = v.y - u.y;
+
+                if (dx == 0 || dy == 0) {
+                    v.x++;
+                    v.y++;
+                    u.x--;
+                    u.y--;
+                    dx = v.x - u.x;
+                    dy = v.y - u.y;
+                }
+
+                if (dx == NaN || dy == NaN) {
+                    continue
+                }
+
+                console.log(dx, dy)
 
                 const dmagnitude = UNLE.mag([dx, dy])
 
-                v.dx = v.x + (dx/dmagnitude) * ((K*K)/dmagnitude)
-                v.dy = v.y + (dy/dmagnitude) * ((K*K)/dmagnitude)
+                var tx = v.dx + (dx / dmagnitude) * ((K * K) / dmagnitude)
+                var ty = v.dy + (dy / dmagnitude) * ((K * K) / dmagnitude)
+
+                if (tx == NaN || ty == NaN) {
+                    console.log(":(")
+                    continue
+                }
+
+                v.dx += tx
+                v.dy += ty
 
             }
         }
@@ -269,12 +292,12 @@ class UNLE {
 
             const mp = UNLE.mid([ev.x, ev.y], [eu.x, eu.y]);
 
-            console.log(mp)
-
             let a = UNLE.f(N, [ev.x, ev.y], mp);
             let b = UNLE.f(N, [eu.x, eu.y], mp);
 
-            console.log(a, b)
+            if (a[0] == NaN || a[1] == NaN || b[0] == NaN || b[1] == NaN) {
+                continue
+            }
 
             ev.x = a[0]
             ev.y = a[1]
@@ -287,11 +310,18 @@ class UNLE {
 
         for (var i = 0; i < nodes.length; i++) {
             const node = nodes[i];
-            const moveX = node.dx;
-            const moveY = node.dy;
+            const dx = node.dx;
+            const dy = node.dy;
 
-            node.x += moveX;
-            node.y += moveY;
+            var tx = node.x + (dx / UNLE.mag([dx, dy])) // Add annealing here...
+            var ty = node.y + (dy / UNLE.mag([dx, dy]))
+
+            if (tx == NaN || ty == NaN) {
+                continue
+            }
+
+            node.x = tx
+            node.y = ty
 
         }
 
