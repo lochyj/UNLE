@@ -8,32 +8,21 @@
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    <script>
-        import { UNLE } from "../src/main.mjs"
+    <script type="module">
+        import { UNLE } from "/src/main.mjs"
 
         const graph = new UNLE({
-            width: 500,
-            height: 500,
+            width: 800,
+            height: 600,
             canvas: document.getElementById("canvas")
         })
 
         graph.add_node("node_1")
         graph.add_node("node_2")
 
-        graph.add_edge("node_1", "node_2")
+        // node_a, node_b, directed
+        graph.add_edge("node_1", "node_2", false)
 
-        if (graph.get_node("node_1").has_neighbor("node_2")) {
-            console.log("This should always return true...")
-        }
-
-        // traverse(<node from>, <node to>, <animation time in ms>)
-        graph.traverse("node_1", "node_2", 120)
-
-        graph.seen("node_1") // False because we havent seen it yet...
-
-        graph.view("node_1")
-
-        graph.seen("node_1") // True
     </script>
 </body>
 </html>

@@ -1,10 +1,20 @@
-function draw_edge(x1, y1, x2, y2) {
-    // TODO
+import * as PIXI from "/lib/pixi.min.mjs"
+
+function draw_edge(context, x1, y1, x2, y2) {
+    //...
 }
 
-function draw_node(id, radius, attributes) {
+function draw_node(context, x, y, radius, attributes) {
     // attributes has {should_draw_id, border, border_colour, border_thickness}
-    // TODO
+
+    const node = new PIXI.Graphics();
+
+    node.beginFill(0xDE3249, 1);
+    node.circle(x, y, radius);
+    node.endFill();
+
+    context.stage.addChild(node);
+
 }
 
 function draw_graph(graph) {
@@ -22,3 +32,5 @@ function draw_graph(graph) {
         // draw_edge()
     }
 }
+
+export { draw_graph, draw_node, draw_edge }
