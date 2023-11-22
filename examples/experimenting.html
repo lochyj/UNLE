@@ -17,11 +17,24 @@
             canvas: document.getElementById("canvas")
         })
 
-        graph.add_node("node_1")
-        graph.add_node("node_2")
+        let nodes = 5;
 
-        // node_a, node_b, directed
-        graph.add_edge("node_1", "node_2", false)
+        for (let i = 0; i < nodes; i++) {
+            for (let j = 0; j < nodes; j++) {
+                graph.add_node(i + j * nodes);
+            }
+        }
+
+        for (let i = 0; i < nodes; i++) {
+            for (let j = 0; j < nodes; j++) {
+                if (i > 0) {
+                    graph.add_edge(i + j * nodes, i - 1 + j * nodes);
+                }
+                if (j > 0) {
+                    graph.add_edge(i + j * nodes, i + (j - 1) * nodes);
+                }
+            }
+        }
 
     </script>
 </body>

@@ -1,6 +1,8 @@
 import * as PIXI from "/lib/pixi.min.mjs"
 
 import * as drawing from "./drawing.mjs"
+import * as layout from "./layout.mjs"
+import * as util from "./util.mjs"
 
 // The interface class for everything in this library
 class UNLE {
@@ -23,7 +25,6 @@ class UNLE {
         // App config |
         // -----------|
 
-        // TODO: add default values for these...
         UNLE.window_width = config.width || 800;
         UNLE.window_height = config.height || 600;
 
@@ -35,24 +36,27 @@ class UNLE {
 
         UNLE.graph = {
             edges: {},
-            vertices: {}
+            nodes: {}
         }
 
-        console.log(config.canvas)
+        // -------|
+        // Canvas |
+        // -------|
 
         UNLE.canvas = config.canvas;
 
         UNLE.ctx = UNLE.canvas.getContext("webgl2",{
-            antialias:true,
-            alpha:true,
-            stencil:true,
-            powerPreference: 'high-performance'
+            antialias: true,
+            alpha: true,
+            stencil: true
         })
 
         UNLE.canvas.style.width = UNLE.window_width + "px";
         UNLE.canvas.style.height = UNLE.window_height + "px";
 
-        UNLE.canvas.style.border = "1px solid black";
+        // --------------|
+        // PIXI settings |
+        // --------------|
 
         UNLE.pixi_app = new PIXI.Application({
             width: UNLE.window_width,
@@ -64,12 +68,30 @@ class UNLE {
             antialias: true
         });
 
+        UNLE.pixi_app.stage.interactive = true;
 
-        UNLE.pixi_app.stage.eventMode = 'static';
+        // ----------------|
+        // Container setup |
+        // ----------------|
 
-        UNLE.pixi_app.stage.hitArea = UNLE.pixi_app.screen;
+        UNLE.Container = new PIXI.Container();
 
-        UNLE.canvas.appendChild(UNLE.app.view);
+        UNLE.EdgeContainer = new PIXI.Container();
+        UNLE.NodeContainer = new PIXI.Container();
+
+        UNLE.EdgeContainer.interactive = true;
+        UNLE.NodeContainer.interactive = true;
+
+        UNLE.Container.addChild(UNLE.EdgeContainer);
+        UNLE.Container.addChild(UNLE.NodeContainer);
+
+        UNLE.pixi_app.stage.addChild(UNLE.Container);
+
+        // ----------------|
+        // Main loop start |
+        // ----------------|
+
+        UNLE.main_loop();
 
     }
 
@@ -84,14 +106,44 @@ class UNLE {
         }
     }
 
-    static main_loop() {
+    static update_nodes() {
+        for (var i = 0; i < Object.keys(UNLE.graph.nodes).length; i++) {
+            const key = Object.keys(UNLE.graph.nodes)[i];
+
+            const node = UNLE.graph.nodes[key];
+
+            UNLE.NodeContainer.children[node.index].x = UNLE.graph.nodes[key].x;
+            UNLE.NodeContainer.children[node.index].y = UNLE.graph.nodes[key].y;
+
+        }
+    }
+
+    static update_edges() {
+
+        UNLE.EdgeContainer.removeChildren();
+
+        for (var i = 0; i < Object.keys(UNLE.graph.edges).length; i++) {
+            const key = Object.keys(UNLE.graph.edges)[i];
+
+            const edge = UNLE.graph.edges[key];
+
+            drawing.update_edge(UNLE.EdgeContainer, UNLE.graph.nodes[edge.node_a].x, UNLE.graph.nodes[edge.node_a].y, UNLE.graph.nodes[edge.node_b].x, UNLE.graph.nodes[edge.node_b].y, [])
+
+        }
+    }
+
+    static async main_loop() {
+
+        layout.layout_engine(UNLE.graph)
+
+        console.log(UNLE.EdgeContainer.children.length)
+
+        UNLE.update_nodes();
+        UNLE.update_edges();
+
         UNLE.pixi_app.renderer.render(UNLE.pixi_app.stage);
 
-        UNLE.pixi_app.ticker.add(() => {
-            console.log("tick")
-        });
-
-        UNLE.pixi_app.ticker.start();
+        await util.sleep(1000);
 
         requestAnimationFrame(UNLE.main_loop);
     }
@@ -101,25 +153,33 @@ class UNLE {
     // ----------------------|
 
     add_node(id) {
-        UNLE.graph.vertices[id] = {
+        UNLE.graph.nodes[id] = {
             id: id,
-            attributes: {},
             x: UNLE.random_position().x,
-            y: UNLE.random_position().y
+            y: UNLE.random_position().y,
+            attributes: {}
         }
 
-        drawing.draw_node(UNLE.pixi_app, UNLE.graph.vertices[id].x, UNLE.graph.vertices[id].y, [])
+        const index = drawing.draw_node(UNLE.NodeContainer, UNLE.graph.nodes[id].x, UNLE.graph.nodes[id].y, 10, [])
+
+        UNLE.graph.nodes[id].index = index;
+
     }
 
     add_edge(id_a, id_b, directed = false) {
-        UNLE.graph.edges[id_a + id_b] = {
+
+        const hash = util.hash(id_a, id_b);
+
+        UNLE.graph.edges[hash] = {
             node_a: id_a,
             node_b: id_b,
             directed: directed,
             attributes: {}
         }
 
-        drawing.draw_edge(UNLE.pixi_app, UNLE.graph.vertices[id_a].x, UNLE.graph.vertices[id_a].y, UNLE.graph.vertices[id_b].x, UNLE.graph.vertices[id_b].y, [])
+        const index = drawing.draw_edge(UNLE.EdgeContainer, UNLE.graph.nodes[id_a].x, UNLE.graph.nodes[id_a].y, UNLE.graph.nodes[id_b].x, UNLE.graph.nodes[id_b].y, [])
+
+        UNLE.graph.edges[hash].index = index;
     }
 
 }
