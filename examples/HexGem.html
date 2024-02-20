@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script type="module">
+            import UNLE from '../src/main.js'
+
+            let graph = new UNLE({
+                "width": 1200,
+                "height": 900,
+                "canvas": document.getElementById("canvas"),
+                "show_id": false,
+                "node_radius": 10,
+                "node_color": 0x000000,
+                "edge_length": 100,
+                "edge_width": 5,
+            });
+
+			const LEVELS = 4, TOTAL_NODES = (LEVELS * (LEVELS + 1)) / 2;
+            
+            let node = 0, side = 0;
+            
+            ///////////////////////
+            // This is comically bad code, please don't copy this. I don't normally code like this, trust
+            ///////////////////////
+
+            
+            const sides = 6;
+            
+
+            for (side = 0; side < sides; side++) {
+				
+				const side_add = side * 10
+
+				// Create nodes
+				for (node = 0; node < TOTAL_NODES; node++) {
+					graph.add_node(node + side_add)
+					//console.log(node)
+				}
+				
+				// Connect all nodes in a line
+				for (node = 0; node < TOTAL_NODES - 1; node++) {
+					graph.add_edge(node + side_add, node + 1 + side_add)
+				}
+				
+				graph.add_edge(0 + side_add, 2 + side_add)
+				graph.add_edge(2 + side_add, 4 + side_add)
+				graph.add_edge(1 + side_add, 4 + side_add)
+				graph.add_edge(1 + side_add, 5 + side_add)
+				graph.add_edge(5 + side_add, 7 + side_add)
+				graph.add_edge(1 + side_add, 7 + side_add)
+				graph.add_edge(1 + side_add, 8 + side_add)
+				graph.add_edge(0 + side_add, 8 + side_add)
+				graph.add_edge(0 + side_add, 9 + side_add)
+				
+			}
+			
+			// Inner connections
+			
+			/*
+			for (let a = 0; a < side; a++) {
+				for (let b = a + 1; b < side; b++) {
+					graph.add_edge(9 + a * 10, 9 + b * 10)
+				}
+			}
+			*/
+			for (side = 0; side < sides; side++) {
+				console.log(9 + side*10, 9 + ((1+side)*10) % 60)
+				graph.add_edge(9 + side*10, 9 + ((1+side)*10) % 60)
+			}
+			
+			
+			// Outer connections
+			for (side = 0; side < sides; side++) {
+				graph.add_edge(3 + side * 10, 6 + (((side + 1) * 10) % ((sides) * 10)))
+				//console.log(3 + side * 10, 6 + (((side + 1) * 10) % ((sides) * 10)))
+			}
+			
+			// Sadly javascript doesn't support emojis in variable names
+			/*
+			// Outer rim 			// 133, 134, 135, 136
+			let edges = [3, 4, 5, 6]
+			let nodes_to_connect = []
+			
+			// Create nodes
+			for (node = 3; node <= 6; node ++) {
+				for (side = 0; side < sides; side++) {
+					let new_node = 100 + node + side * 10
+					nodes_to_connect.push(new_node)
+					graph.add_node(new_node)
+					console.log(new_node)
+				}
+			}
+			
+			// Connect outer rim
+			for (let i = 0; i < nodes_to_connect.length; i++) {
+				graph.add_edge(nodes_to_connect[i], nodes_to_connect[(i + 1) % nodes_to_connect.length])
+				graph.add_edge(nodes_to_connect[i], nodes_to_connect[i] - 100)
+				//console.log(nodes_to_connect[i], nodes_to_connect[(i+1) % nodes_to_connect.length])
+				//console.log(nodes_to_connect[i], nodes_to_connect[i] - 100)
+				//console.log(nodes_to_connect[i], nodes_to_connect[(i+1) % nodes_to_connect.length] - 100)
+			}
+			*/
+			
+			
+			
+			for (side = 0; side < sides; side++) {
+				graph.add_edge(side * 10, 8 + ((side + 1) * 10) % 60)
+				//console.log(side * 10, 8 + ((side + 1) * 10) % 60)
+			}
+			
+			
+			
+            graph.showTime()
+        </script>
+    </body>
+</html>

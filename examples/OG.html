@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script type="module">
+            import UNLE from '../src/main.js'
+
+            let graph = new UNLE({
+                "width": 1200,
+                "height": 900,
+                "canvas": document.getElementById("canvas"),
+                "show_id": true,
+                "node_radius": 10,
+                "node_color": 0x000000,
+                "edge_length": 100,
+                "edge_width": 5,
+            });
+
+
+            graph.add_node(0)
+            for (let i = 1; i < 10; i++) {
+                graph.add_node(i)
+                graph.add_edge(0, i)
+            }
+
+            graph.add_node("Yes", "Lmao", 0x03fc6b)
+            graph.add_edge(4, "Yes")
+
+            for (let i = 10; i < 19; i++) {
+                graph.add_node(i)
+                graph.add_edge("Yes", i)
+            }
+
+            graph.add_edge(5, 15)
+            graph.add_edge(7, 12)
+
+            graph.showTime()
+        </script>
+    </body>
+</html>
