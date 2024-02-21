@@ -109,7 +109,7 @@ export default class zoom {
         const s = sens ** acccanvas;
         var worldPos = {x: (x - stage.x) / stage.scale.x, y: (y - stage.y)/stage.scale.y};
         // Limit minimum and maximum size
-        const minSize = 100
+        const minSize = 8
         const maxSize = .02
         var newScale = {x: Math.max(Math.min(stage.scale.x * s, minSize), maxSize), y: Math.max(Math.min(stage.scale.y * s, minSize), maxSize)};
 

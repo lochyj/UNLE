@@ -15,16 +15,6 @@ class UNLE {
     static nodeG = new PIXI.Graphics()
     static nodeT
 
-    static textOptions = {
-        font: "bold 64px Roboto", // Set  style, size and font
-        fontSize: 208,
-        fill: '#FFFFFF', // Set fill color to blue
-        align: 'center', // Center align the text, since it's multiline
-        stroke: '#000000', // Set stroke color to a dark blue gray color
-        strokeThickness: 2, // Set stroke thickness to 20
-        lineJoin: 'round' // Set the lineJoin to round
-    }
-
     static LinesContainer
     static NodesContainer
 
@@ -41,10 +31,11 @@ class UNLE {
         const nodes = UNLE.NodesContainer.children;
         const length = nodes.length;
         const matrices = Array(length)
+
         for (let i = 0; i < length; i++) {
             matrices[i] = [nodes[i].x,nodes[i].y]
         }
-        return matrices
+        return [matrices, UNLE.edgesListIndexes]
     }
 
     constructor(data) {
@@ -64,19 +55,77 @@ class UNLE {
         if (data.node_radius != null) UNLE.nodeRadius = data.node_radius; else UNLE.nodeRadius = 20;
         if (data.node_color != null) UNLE.nodeColor = data.node_color; else UNLE.nodeColor = 0x808080;
         if (data.edge_length != null) UNLE.edgeLength = data.edge_length / 10; else UNLE.edgeLength = 100 / 10;
-        if (data.edge_width != null) UNLE.edgeWidth = data.edge_width; else UNLE.edgeWidth = 3;
+        if (data.edge_width != null) UNLE.edgeWidth = data.edge_width; else UNLE.edgeWidth = 2;      
 
-        UNLE.app = new PIXI.Application({
+        // Extremely janky line that should be fixed
+        //document.getElementsByTagName(data.canvas.id)[0].style.border = "1rem solid white"
+        
+        
+        
+        
+        /////////////////
+        // Colour schemes
+        /////////////////
+        
+        // Dark mode
+/*
+        document.bgColor = "black"
+        UNLE.outlineColour = 0xffffff
+        UNLE.nodeColour = 0x000000
+        UNLE.textColour = 0xffffff
+        UNLE.textStrokeColour = 0x000000
+        UNLE.backgroundColour = 0x000000
+*/
+        
+        
+        // Light mode
+        /*
+        document.bgColor = "white"
+        UNLE.outlineColour = 0x000000
+        UNLE.nodeColour = 0xffffff
+        UNLE.textColour = 0x000000
+        UNLE.textStrokeColour = 0xffffff
+        UNLE.backgroundColour = 0xffffff
+        */
+        
+        
+        // HyprMonkey mode
+        document.bgColor = "black"
+        UNLE.outlineColour = 0x64727d
+        UNLE.nodeColour = 0xffd83c
+        UNLE.textColour = 0x000000
+        UNLE.textStrokeColour = 0xffffff
+        UNLE.backgroundColour = 0x000000
+        
+        
+		UNLE.textOptions = {
+			font: "bold 64px Roboto", // Set  style, size and font
+			fontSize: 112, // 8x resolution
+			fill: UNLE.textColour, // Set fill color to white
+			align: 'center', // Center align the text
+			stroke: UNLE.textStrokeColour, // Set stroke color to a dark blue gray color
+			strokeThickness: 4,
+			lineJoin: 'round' // Set the lineJoin to round
+		}
+		
+		
+		UNLE.app = new PIXI.Application({
             width: UNLE.width,
             height: UNLE.height,
             resolution: 1,
             autoDensity: true,
             antialias: false,
-            clearBeforeRender: false,
-            backgroundColor: 0x000000
+            clearBeforeRender: true, // set to true for screenshots or white backgrounds, false for performance
+            backgroundColor: UNLE.backgroundColour,
+            preserveDrawingBuffer: false // set to true for screenshots, false for performance
         })
 
         data.canvas.appendChild(UNLE.app.view)
+        
+        document.getElementsByTagName(data.canvas.id)[0].style.border = "1rem solid white" // Dark Or HyprMonkey mode
+        //document.getElementsByTagName(data.canvas.id)[0].style.border = "1rem solid black" // Light mode
+		
+		
 
         UNLE.init()
     }
@@ -85,21 +134,21 @@ class UNLE {
 		///////////////////////////////////
 		// Initialise line and node sprites
 		///////////////////////////////////
-        UNLE.lineG.beginFill(0xFFFFFF);
+        UNLE.lineG.beginFill(UNLE.outlineColour);
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
         UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
 
-        UNLE.nodeG.lineStyle(40, 0xffffff, 1) // 40x resolution nodes
-        UNLE.nodeG.beginFill(0x000000, 1);
-        UNLE.nodeG.drawCircle(0, 0, UNLE.nodeRadius * 40) // 40x resolution nodes
+        UNLE.nodeG.lineStyle(1, UNLE.outlineColour, 1)
+        UNLE.nodeG.beginFill(UNLE.nodeColour, 1);
+        UNLE.nodeG.drawCircle(0, 0, UNLE.nodeRadius * 1)
         UNLE.nodeG.endFill();
-        UNLE.nodeT = UNLE.app.renderer.generateTexture(UNLE.nodeG);
+        UNLE.nodeT = UNLE.app.renderer.generateTexture(UNLE.nodeG, {resolution: 8});
 
         UNLE.app.stage.eventMode = 'static';
 
         UNLE.app.stage.hitArea = UNLE.app.screen;
-        UNLE.app.stage.on('mouseup', UNLE.onDragEnd);
+        UNLE.app.stage.on('pointerup', UNLE.onDragEnd);
         UNLE.app.stage.on('pointerupoutside', UNLE.onDragEnd);
 
         UNLE.Container = new PIXI.Container();
@@ -200,27 +249,19 @@ class UNLE {
         let node
 
         if (UNLE.showID) {
-            const nodeG = new PIXI.Graphics();
-            nodeG.lineStyle(40, 0xffffff, 1); // 40x resolution nodes
-            nodeG.beginFill(colour, 1);
-            nodeG.drawCircle(0, 0, UNLE.nodeRadius * 40); // 40x resolution nodes
-            nodeG.endFill();
-
             const nodeContainer = new PIXI.Container();
-            nodeContainer.addChild(nodeG);
+            nodeContainer.addChild(UNLE.nodeG);
 
             const annotation = new PIXI.Text(text, UNLE.textOptions)
             annotation.anchor.set(0.5)
-            annotation.scale.set(2)
+            annotation.scale.set(.125)
             nodeContainer.addChild(annotation)
-            const nodeT = UNLE.app.renderer.generateTexture(nodeContainer)
+            const nodeT = UNLE.app.renderer.generateTexture(nodeContainer, {resolution: 8})
             node = new PIXI.Sprite(nodeT)
-            node.scale.set(.0125, .0125) // 100x resolution nodes
         }
 
         else {
             node = new PIXI.Sprite(UNLE.nodeT)
-            node.scale.set(.0125, .0125) // 100x resolution nodes
         }
 
         node.anchor.set(0.5);
@@ -387,11 +428,8 @@ class UNLE {
 				const node = NODES[i]
 				const weight = UNLE.nodesEdgeNum[node.name]
 
-				const x = e.data[i][0] / weight
-				const y = e.data[i][1] / weight
-
-				node.x += x
-				node.y += y
+				node.x += e.data[i][0] / weight
+				node.y += e.data[i][1] / weight
 			}
             
             UNLE.drawLines()
@@ -402,48 +440,12 @@ class UNLE {
         // Dispatch calculations
 		if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0 && UNLE.isForcesWorkerReady) {
 
-			const NODES = UNLE.generateNodePositionMatrix()
-			
-			UNLE.forcesWorker.postMessage([NODES, UNLE.edgesListIndexes])
+			UNLE.forcesWorker.postMessage(UNLE.generateNodePositionMatrix())
 			UNLE.isForcesWorkerReady = false
+
 		}
     }
-
-    generateRandomGraph(graph, numEdges, numNodes) {
-
-        // Add nodes to the graph
-        for (var i = 1; i <= numNodes; i++) {
-            graph.add_node(i);
-        }
-
-        // Connect the nodes randomly
-        var connectedNodes = new Set();
-        for (var i = 1; i <= numNodes; i++) {
-            var nodeId = i;
-
-            // Connect the current node with a random previously connected node
-            if (connectedNodes.size > 0) {
-                var randomNodeId = Array.from(connectedNodes)[Math.floor(Math.random() * connectedNodes.size)];
-                graph.add_edge(nodeId, randomNodeId);
-            }
-
-            connectedNodes.add(nodeId);
-        }
-
-        // Add additional random edges if required
-        var remainingEdges = numEdges - numNodes + 1;
-        while (remainingEdges > 0) {
-            var sourceNodeId = Math.floor(Math.random() * numNodes) + 1;
-            var targetNodeId = Math.floor(Math.random() * numNodes) + 1;
-
-            // Avoid self-loops and duplicate edges
-            if (sourceNodeId !== targetNodeId && !edgeExists(graph.edges, sourceNodeId, targetNodeId)) {
-                graph.add_edge(sourceNodeId, targetNodeId);
-                remainingEdges--;
-            }
-        }
-    }
-
+    
     static edgeExists(edges, source, target) {
         for (var i = 0; i < edges.length; i++) {
             var edge = edges[i];

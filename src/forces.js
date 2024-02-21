@@ -1,20 +1,19 @@
 "use strict"
 
+const min = 2 // Minimum value
+let i = 0, j = 0
+
 onmessage = e => {
 
     const NODES = e.data[0]
     const EDGES = e.data[1]
 
-    const k = 100 / Math.sqrt(NODES.length) // Actual edge length
-	const min = 2 // Minimum value
-
-    let i = 0
-    let j = 1
+    const k = 100 / NODES.length // Actual edge length
+	const kmin = k / min
+	const kpmin = k + min
 
     let movement = Array(NODES.length)
     for (i = 0; i < NODES.length; i++) movement[i] = [0, 0]
-
-
 
     // Calculate repel forces for all nodes
     for (i = 0; i < NODES.length; i++) {
@@ -25,10 +24,10 @@ onmessage = e => {
 			const dx = node1[0] - node2[0]
 			const dy = node1[1] - node2[1]
 
-			const distance = Math.sqrt(dx * dx + dy * dy)
-			//if (distance <= 0) continue // Possibly unnecessary safety check
+			const distance = (dx * dx + dy * dy)**.5
 
-			const force = k / (distance + (k / min))
+
+			const force = kpmin / (distance + kmin)
 			const x = dx * force;
 			const y = dy * force;
 
@@ -39,7 +38,6 @@ onmessage = e => {
 			movement[j][1] -= y
 		}
 	}
-
 
 	// Calculate attractive forces along edges  
     for (i = 0; i < EDGES.length; i++) {
@@ -52,10 +50,10 @@ onmessage = e => {
 		const dx = source[0] - target[0]
 		const dy = source[1] - target[1]
 		
-		const distance = Math.sqrt(dx * dx + dy * dy)
-		//if (distance <= 0) continue // Possibly unnecessary safety check
+		const distance = (dx * dx + dy * dy)**.5
 
-		const force = (-(k / (distance + (k / min))) + min) / 2;
+
+		const force = (-(k / (distance + kmin)) + min) / 2;
 		const x = dx * force;
 		const y = dy * force;
 
