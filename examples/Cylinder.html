@@ -10,14 +10,14 @@
 
             let graph = new UNLE({
                 "width": 1200,
-                "height": 900,
+                "height": 868,
                 "canvas": document.getElementById("canvas"),
                 "show_id": false,
                 "node_radius": 10,
                 "node_color": 0x000000,
                 "edge_length": 100,
-                "edge_width": 5,
-            });
+                "edge_width": 2,
+            })
 
 
             const NODES_PER_CIRCLE = 10, LAYERS = 6;
@@ -27,7 +27,6 @@
 			// Create nodes
 			for (node = 0; node < NODES_PER_CIRCLE * LAYERS; node++) {
 				graph.add_node(node)
-				console.log(node)
 			}
 			
 			// Connect nodes into circles
@@ -35,7 +34,6 @@
 			for (layer = 0; layer < LAYERS; layer++) {
 				for (node = 0; node < NODES_PER_CIRCLE; node++) {
 					graph.add_edge(node + layer * NODES_PER_CIRCLE, ((node+1) % NODES_PER_CIRCLE) + layer * NODES_PER_CIRCLE )
-					//console.log(node + layer * NODES_PER_CIRCLE, ((node+1) % NODES_PER_CIRCLE) + layer * NODES_PER_CIRCLE )
 				}
 			}
 			
@@ -43,7 +41,6 @@
 			for (node = 0; node < NODES_PER_CIRCLE; node++) {
 				for (layer = 0; layer < LAYERS-1; layer++) {
 					graph.add_edge(node + layer * NODES_PER_CIRCLE, node + (layer+1) * NODES_PER_CIRCLE)
-					//console.log(node + layer * NODES_PER_CIRCLE, node + (layer+1) * NODES_PER_CIRCLE)
 				}
 			}
 			
