@@ -2,6 +2,7 @@
 <html>
     <head>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.0/pixi.min.js" integrity="sha512-NVWPDocxwt9T3NhwBzx3c8vhg2WqGVgehZ100xOySkvbfdhqQDJbvzlSBWyFkFJEPwta89jdpldx2BlggNURVQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        
     </head>
     <body>
         <div id="canvas"></div>
@@ -12,17 +13,51 @@
                 "width": 1200,
                 "height": 868,
                 "canvas": document.getElementById("canvas"),
-                "show_id": false,
+                "show_id": true,
+                "directed_edges": true,
                 "node_radius": 10,
                 "node_color": 0x000000,
                 "edge_length": 100,
                 "edge_width": 2,
             })
 
-            graph.add_node(1)
-            graph.add_node(2)
-            graph.add_edge(1,2)
 
+            const LEVELS = 4, TOTAL_NODES = (LEVELS * (LEVELS + 1)) / 2;
+            
+            let node = 0;
+            
+			//console.log(TOTAL_NODES)
+			
+			// Create nodes
+			for (node = 0; node < TOTAL_NODES; node++) {
+				graph.add_node(node)
+				//console.log(node)
+			}
+			
+			// Connect all nodes in a line
+			for (node = 0; node < TOTAL_NODES - 1; node++) {
+				graph.add_edge(node, node + 1)
+			}
+			
+			graph.add_edge(0, 2)
+			
+			graph.add_edge(2, 4)
+			
+			graph.add_edge(1, 4)
+			
+			graph.add_edge(1, 5)
+			
+			graph.add_edge(5, 7)
+			
+			graph.add_edge(1, 7)
+			
+			graph.add_edge(1, 8)
+			
+			graph.add_edge(0, 8)
+			
+			graph.add_edge(0, 9)
+			
+			
             graph.showTime()
         </script>
     </body>

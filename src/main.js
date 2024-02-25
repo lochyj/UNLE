@@ -3,58 +3,43 @@
 import zoom from './zoom.js'
 
 class UNLE {
-    static app;
+    static app
 
-    static attractWorker = new Worker('../src/attractForce.js')
-    static repelWorker = new Worker('../src/repelForce.js')
+    static forcesWorker = new Worker('../src/forces.js')
+    static isForcesWorkerReady = true
 
     //This is necessary to reuse the same texture for a simple line
-    static lineG = new PIXI.Graphics();
-    static lineT;
+    static lineG = new PIXI.Graphics()
+    
+    static Triangle_Graphics = new PIXI.Graphics()
+    static Triangle_Texture
 
-    static nodeG = new PIXI.Graphics();
-    static nodeT;
+    static Node_Graphics = new PIXI.Graphics()
+    static nodeT
 
-    static textOptions = {
-        font: "bold 64px Roboto", // Set  style, size and font
-        fill: '#FFFFFF', // Set fill color to blue
-        align: 'center', // Center align the text, since it's multiline
-        stroke: '#000000', // Set stroke color to a dark blue gray color
-        strokeThickness: 2, // Set stroke thickness to 20
-        lineJoin: 'round' // Set the lineJoin to round
-    }
+    static LinesContainer
+    static Triangles_Container
+    static NodesContainer
 
-    static shouldLock = false;
-    static locked = { x: 0, y: 0 };
+    static dragTarget = null
+    static DragTargetPosition = [0, 0]
 
-    static LinesContainer;
-    static NodesContainer;
+    static edgesList = []
+    static edgesListIndexes = []
 
-    static dragTarget = null;
+    static Nodes_Weight = {}
 
-    static edgesList = [];
-    static edgesListIndexes = [];
-
-    static nodesEdgeNum = {};
-
-    static nodeNames = [];
-
-    static isAttractReady = true;
-    static isRepelReady = true;
-
-    static attractForces = [[0]];
-    static repelForces = [[0]];
-
-    static temp = 1;
+    static nodeNames = []
 
     static generateNodePositionMatrix() {
         const nodes = UNLE.NodesContainer.children;
         const length = nodes.length;
-        const matrices = Array(length);
+        const matrices = Array(length)
+
         for (let i = 0; i < length; i++) {
             matrices[i] = [nodes[i].x,nodes[i].y]
-        };
-        return matrices;
+        }
+        return [matrices, UNLE.edgesListIndexes]
     }
 
     constructor(data) {
@@ -71,58 +56,102 @@ class UNLE {
         if (data.width != null) UNLE.width = data.width; else UNLE.width = 800;
         if (data.height != null) UNLE.height = data.height; else UNLE.height = 600;
         if (data.show_id != null) UNLE.showID = data.show_id; else UNLE.showID = true;
-        if (data.node_radius != null) UNLE.nodeRadius = data.node_radius; else UNLE.nodeRadius = 20;
+        if (data.directed_edges != null) UNLE.directedEdges = data.directed_edges; else UNLE.directedEdges = false;
+        if (data.node_radius != null) UNLE.nodeRadius = data.node_radius; else UNLE.nodeRadius = 10;
         if (data.node_color != null) UNLE.nodeColor = data.node_color; else UNLE.nodeColor = 0x808080;
         if (data.edge_length != null) UNLE.edgeLength = data.edge_length / 10; else UNLE.edgeLength = 100 / 10;
-        if (data.edge_width != null) UNLE.edgeWidth = data.edge_width; else UNLE.edgeWidth = 3;
+        if (data.edge_width != null) UNLE.edgeWidth = data.edge_width; else UNLE.edgeWidth = 2;        
+        
+        /////////////////
+        // Colour schemes
+        /////////////////
+        
+        // Dark mode
 
-        console.log(data.canvas) // This line reminds firefox that data.canvas is in fact a canvas
-
-        const ctx = data.canvas.getContext("webgl2",{
-		  antialias:false,
-		  alpha:false,
-		  stencil:false,
-		  powerPreference: 'high-performance'
-		})
-
-        UNLE.app = new PIXI.Application({
+        document.bgColor = "black"
+        UNLE.outlineColour = 0xffffff
+        UNLE.nodeColour = 0x000000
+        UNLE.textColour = 0xffffff
+        UNLE.textStrokeColour = 0x000000
+        UNLE.backgroundColour = 0x000000
+        
+        
+        // Light mode
+        /*
+        document.bgColor = "white"
+        UNLE.outlineColour = 0x000000
+        UNLE.nodeColour = 0xffffff
+        UNLE.textColour = 0x000000
+        UNLE.textStrokeColour = 0xffffff
+        UNLE.backgroundColour = 0xffffff
+        */
+        
+        
+        // HyprMonkey mode
+        /*
+        document.bgColor = "black"
+        UNLE.outlineColour = 0x64727d
+        UNLE.nodeColour = 0xffd83c
+        UNLE.textColour = 0x000000
+        UNLE.textStrokeColour = 0xffffff
+        UNLE.backgroundColour = 0x000000
+        */
+        
+		UNLE.textOptions = {
+			font: "bold 64px Roboto", // Set  style, size and font
+			fontSize: 112, // 8x resolution
+			fill: UNLE.textColour, // Set fill color to white
+			align: 'center', // Center align the text
+			stroke: UNLE.textStrokeColour, // Set stroke color to a dark blue gray color
+			strokeThickness: 4,
+			lineJoin: 'round' // Set the lineJoin to round
+		}
+		
+		
+		UNLE.app = new PIXI.Application({
             width: UNLE.width,
             height: UNLE.height,
             resolution: 1,
             autoDensity: true,
-            antialias: false,
-            clearBeforeRender: false,
-            backgroundColor: 0x0A0A0A,
-            view: data.canvas,
-            context: ctx
-        });
+            antialias: true,
+            clearBeforeRender: false, // set to true for screenshots or white backgrounds, false for performance or black backgrounds
+            backgroundColor: UNLE.backgroundColour,
+            preserveDrawingBuffer: false // set to true for screenshots, false for performance
+        })
 
-        //data.canvas.appendChild(UNLE.app.view);
+        data.canvas.appendChild(UNLE.app.view)
 
-        UNLE.k = Math.sqrt(((UNLE.width * UNLE.height) / 160))
+        document.getElementsByTagName(data.canvas.id)[0].style.border = "1rem solid white" // Dark Or HyprMonkey mode
+        //document.getElementsByTagName(data.canvas.id)[0].style.border = "1rem solid black" // Light mode
+		
+		
 
-        UNLE.init();
-
-        // Main loop
-        /*
-        if (!UNLE.isDebug)
-            UNLE.main();
-        else
-            UNLE.debugMain();
-        */
+        UNLE.init()
     }
 
     static init() {
-        UNLE.lineG.beginFill(0xFFFFFF);
+		///////////////////////////////////
+		// Initialise line and node sprites
+		///////////////////////////////////
+        UNLE.lineG.beginFill(UNLE.outlineColour);
         UNLE.lineG.drawRect(0, 0, 1, 1);
         UNLE.lineG.endFill();
-        UNLE.lineT = UNLE.app.renderer.generateTexture(UNLE.lineG, {resolution: 1, scaleMode: PIXI.SCALE_MODES.LINEAR});
+        
+        if (UNLE.directedEdges) {
+			UNLE.Triangle_Graphics.beginFill(0xff0000);
+			UNLE.Triangle_Graphics.moveTo(0, 10);
+			UNLE.Triangle_Graphics.lineTo(10, 10);
+			UNLE.Triangle_Graphics.lineTo(5, 0);
+			UNLE.Triangle_Graphics.lineTo(0, 10);
+			UNLE.Triangle_Graphics.endFill();
+			UNLE.Triangle_Texture = UNLE.app.renderer.generateTexture(UNLE.Triangle_Graphics, {resolution: 8, scaleMode: PIXI.SCALE_MODES.LINEAR})
+		}
 
-        UNLE.nodeG.lineStyle(1, 0xffffff, 1);
-        UNLE.nodeG.beginFill(0x000000, 1);
-        UNLE.nodeG.drawCircle(0, 0, UNLE.nodeRadius);
-        UNLE.nodeG.endFill();
-        UNLE.nodeT = UNLE.app.renderer.generateTexture(UNLE.nodeG);
+        UNLE.Node_Graphics.lineStyle(1, UNLE.outlineColour, 1)
+        UNLE.Node_Graphics.beginFill(UNLE.nodeColour, 1);
+        UNLE.Node_Graphics.drawCircle(0, 0, UNLE.nodeRadius)
+        UNLE.Node_Graphics.endFill();
+        UNLE.Node_Texture = UNLE.app.renderer.generateTexture(UNLE.Node_Graphics, {resolution: 8});
 
         UNLE.app.stage.eventMode = 'static';
 
@@ -132,9 +161,11 @@ class UNLE {
 
         UNLE.Container = new PIXI.Container();
         UNLE.LinesContainer = new PIXI.Container();
+        UNLE.Triangles_Container = new PIXI.Container();
         UNLE.NodesContainer = new PIXI.Container();
 
         UNLE.Container.addChild(UNLE.LinesContainer);
+        UNLE.Container.addChild(UNLE.Triangles_Container);
         UNLE.Container.addChild(UNLE.NodesContainer);
 
         UNLE.Container.scale = {x: 0.75, y: 0.75}
@@ -146,133 +177,99 @@ class UNLE {
         UNLE.LayoutAlgorithm = UNLE.fruchtermanReingoldWebWorker;
 
         UNLE.LinesContainer.interactiveChildren = false;
-    }
+        UNLE.LinesContainer.eventMode = 'none';
 
-    // Empty function to override in the constructor if needed that gets called within the main loop
-    static DisplayDebug(){}
-
-    static initDebug() {
-        const debugDiv = UNLE.DebugDiv;
-
-        const NodesDetails = document.createElement('details');
-        const NodeTitle = document.createElement('summary');
-        NodeTitle.innerText = 'Nodes'
-        NodesDetails.appendChild(NodeTitle);
-
-        const NodesInfo = document.createElement('div');
-        NodesDetails.appendChild(NodesInfo);
-
-        const EdgesDetails = document.createElement('details');
-        const EdgeTitle = document.createElement('summary');
-        EdgeTitle.innerText = 'Edges'
-        EdgesDetails.appendChild(EdgeTitle);
-        const EdgesInfo = document.createElement('div');
-        EdgesDetails.appendChild(EdgesInfo);
-
-        const stepButton = document.createElement('button');
-        stepButton.innerText = 'Step';
-        stepButton.onclick = UNLE.debugMain;
-        debugDiv.appendChild(stepButton);
-
-        debugDiv.appendChild(NodesDetails);
-        debugDiv.appendChild(EdgesDetails);
-
-        UNLE.EdgesInfo = EdgesInfo;
-        UNLE.NodesInfo = NodesInfo;
-    }
-
-    static debug() {
-        UNLE.NodesInfo.innerHTML = '';
-        UNLE.EdgesInfo.innerHTML = '';
-
-        UNLE.NodesContainer.children.forEach(node => {
-            const nodeInfo = document.createElement('div');
-            nodeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px; border-radius: 5px;';
-            nodeInfo.innerHTML = `Node ${node.name} <br> x: ${node.x} <br> y: ${node.y} <br> edges: ${UNLE.nodesEdgeNum[node.name]}`;
-            UNLE.NodesInfo.appendChild(nodeInfo);
-        });
-
-        UNLE.edgesList.forEach(edge => {
-            const edgeInfo = document.createElement('div');
-            edgeInfo.style = 'border: 1px solid #000000; padding: 5px; margin: 5px; border-radius: 5px;';
-            edgeInfo.innerHTML = `Edge ${edge[0]} -> ${edge[1]} <br> length: ${edge[2]}`;
-            UNLE.EdgesInfo.appendChild(edgeInfo);
-        });
+        UNLE.Triangles_Container.interactiveChildren = false;
+        UNLE.Triangles_Container.eventMode = 'none';
+        
+        UNLE.NodesContainer.renderable = true;
+        UNLE.Triangles_Container.renderable = true;
     }
 
     static onDragMove(event) {
         if (!UNLE.dragTarget)
             return;
-
-        UNLE.dragTarget.parent.toLocal(event.global, null, UNLE.dragTarget.position);
-
-        // Lock the dragged node to the cursor / finger
-        UNLE.locked.x = UNLE.dragTarget.x;
-        UNLE.locked.y = UNLE.dragTarget.y;
+ 
+        UNLE.dragTarget.x = UNLE.Container.toLocal(event).x - UNLE.Drag_Offset_X
+        UNLE.dragTarget.y = UNLE.Container.toLocal(event).y - UNLE.Drag_Offset_Y
+        
+        UNLE.drawLines() // Can reduce performance but makes lines follow dragged node
     }
 
     static onDragStart() {
-        UNLE.dragTarget = this;
-        UNLE.app.stage.on('pointermove', UNLE.onDragMove);
-
-        // Lock the dragged node to the cursor / finger
-        UNLE.locked.x = UNLE.dragTarget.x;
-        UNLE.locked.y = UNLE.dragTarget.y;
-
-        UNLE.zoom.disable_pan();
+        UNLE.dragTarget = this
+        
+        UNLE.app.stage.on('pointermove', UNLE.onDragMove)
+        
+        UNLE.Drag_Offset_X = UNLE.Container.toLocal(event).x - this.x
+        UNLE.Drag_Offset_Y = UNLE.Container.toLocal(event).y - this.y
+        
+        UNLE.zoom.disable_pan()
     }
 
     static onDragEnd() {
         if (UNLE.dragTarget) {
-            UNLE.app.stage.off('pointermove', UNLE.onDragMove);
-            UNLE.dragTarget = null;
-            UNLE.zoom.enable_pan();
+            UNLE.app.stage.off('pointermove', UNLE.onDragMove)
+            UNLE.dragTarget = null
+            UNLE.zoom.enable_pan()
         }
     }
 
     static toDegrees(angle) {
-        return angle * (180 / Math.PI);
+        return angle * (180 / Math.PI)
     }
 
     static toRadians(angle) {
-        return angle * (Math.PI / 180);
+        return angle * (Math.PI / 180)
     }
 
     // Implement this fully later -> directed edges and weighted edges to go...
     static drawLines() {
-        const nodes = UNLE.NodesContainer.children;
-        const edges = UNLE.edgesListIndexes;
-        const lines = UNLE.LinesContainer.children;
-
-        //console.log(lines[0].angle)
+        const nodes = UNLE.NodesContainer.children
+        const edges = UNLE.edgesListIndexes
+        const lines = UNLE.LinesContainer.children
 
         for (let i = 0; i < edges.length; i++) {
             const edge = edges[i]
 
-            const x1 = nodes[edge[0]].x;
-            const y1 = nodes[edge[0]].y;
-            const x2 = nodes[edge[1]].x;
-            const y2 = nodes[edge[1]].y;
+            const x1 = nodes[edge[0]].x
+            const y1 = nodes[edge[0]].y
+            const x2 = nodes[edge[1]].x
+            const y2 = nodes[edge[1]].y
 
-            const line = lines[i];
+            const line = lines[i]
 
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            line.x = x2;
-            line.y = y2;
-            line.height = Math.sqrt((dx * dx) + (dy * dy));
-            line.width = UNLE.edgeWidth;
-
-            line.angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180;
+            const dx = x2 - x1
+            const dy = y2 - y1
+            
+            const distance = Math.sqrt((dx * dx) + (dy * dy))
+            const angle = -(Math.atan2(dx, dy) * 180 / Math.PI) - 180
+            
+            line.x = x2
+            line.y = y2
+            line.height = distance
+            line.width = UNLE.edgeWidth
+            line.angle = angle
+            
+            if (UNLE.directedEdges) {
+				const triangle = UNLE.Triangles_Container.children[i]
+				
+				const angleRad = angle * Math.PI / 180
+				const distance_offset = distance - UNLE.nodeRadius * 1.3
+				
+				triangle.x = x1 + (distance_offset * Math.sin(angleRad))
+				triangle.y = y1 - (distance_offset * Math.cos(angleRad))
+				triangle.angle = angle
+			}
         };
     }
 
     static randomX() {
-        return Math.floor(Math.random() * UNLE.width);
+        return Math.floor(Math.random() * UNLE.width) - 300;
     }
 
     static randomY() {
-        return Math.floor(Math.random() * UNLE.height);
+        return Math.floor(Math.random() * UNLE.height) - 300;
     }
 
     static randomColour() {
@@ -284,7 +281,25 @@ class UNLE {
         if (colour == null)
             colour = UNLE.nodeColor;
 
-        const node = new PIXI.Sprite(UNLE.nodeT);
+
+        let node
+
+        if (UNLE.showID) {
+            const nodeContainer = new PIXI.Container();
+            nodeContainer.addChild(UNLE.Node_Graphics);
+
+            const annotation = new PIXI.Text(text, UNLE.textOptions)
+            annotation.anchor.set(0.5)
+            annotation.scale.set(.125)
+            nodeContainer.addChild(annotation)
+            const node_texture = UNLE.app.renderer.generateTexture(nodeContainer, {resolution: 8})
+            node = new PIXI.Sprite(node_texture)
+        }
+
+        else {
+            node = new PIXI.Sprite(UNLE.Node_Texture)
+        }
+
         node.anchor.set(0.5);
         node.name = id;
 
@@ -299,113 +314,41 @@ class UNLE {
 
     static fruchtermanReingoldWebWorker() {
 
-        if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0 && (UNLE.isAttractReady || UNLE.isRepelReady)) {
-			const nodes = UNLE.generateNodePositionMatrix();
+        // Move each node
+        UNLE.forcesWorker.onmessage = e => {
+		
+            const NODES = UNLE.NodesContainer.children
+            
+            // Remove dragged node's movement
+            
+			for (let i = 0; i < NODES.length; i++) {
+				
+				// Lock node that is being held down by the mice
+				if (NODES[i] == UNLE.dragTarget) {
+					continue
+				}
+				
+				const node = NODES[i]
+				const weight = UNLE.Nodes_Weight[node.name]
 
-			if (UNLE.isAttractReady) {
-				UNLE.attractWorker.postMessage([nodes, UNLE.edgesListIndexes, UNLE.nodesEdgeNum])
-				UNLE.isAttractReady = false
+				node.x += e.data[i][0] / weight
+				node.y += e.data[i][1] / weight
 			}
 
-			if (UNLE.isRepelReady) {
-				UNLE.repelWorker.postMessage(nodes)
-				UNLE.isRepelReady = false
-			}
+            UNLE.drawLines()
+
+            UNLE.isForcesWorkerReady = true
         }
 
-        UNLE.attractWorker.onmessage = e => {
+        // Dispatch calculations
+		if (UNLE.edgesList != [] && UNLE.NodesContainer.children.length != 0 && UNLE.isForcesWorkerReady) {
 
-            UNLE.attractForces = e.data
-        }
+			UNLE.forcesWorker.postMessage(UNLE.generateNodePositionMatrix())
+			UNLE.isForcesWorkerReady = false
 
-        UNLE.repelWorker.onmessage = e => {
-
-            UNLE.repelForces = e.data
-            UNLE.isRepelReady = true
-        }
-
-        if (UNLE.attractForces[0][0] !== 0 && UNLE.repelForces[0][0] !== 0) {
-            const nodes = UNLE.NodesContainer.children
-
-            // Move each node
-            for (let i = 0; i < nodes.length; i++) {
-                const node = nodes[i]
-                const moveX = UNLE.attractForces[i][0] + UNLE.repelForces[i][0]
-                const moveY = UNLE.attractForces[i][1] + UNLE.repelForces[i][1]
-
-                const edgeNum = UNLE.nodesEdgeNum[node.name]
-
-                const move = Math.sqrt(moveX*moveX+moveY*moveY)
-
-				// Far distancing vs close distancing
-                let EdgeLength = 0
-
-				EdgeLength = Math.sqrt(nodes.length) + edgeNum * edgeNum;
-
-				const x = moveX / EdgeLength
-				const y = moveY / EdgeLength
-
-
-				if (Math.abs(x) == Infinity || Math.abs(y) == Infinity) return;
-				node.x += x
-				node.y += y
-            }
-
-            UNLE.isAttractReady = true
-        }
-
-        if (UNLE.dragTarget != null) {
-            UNLE.dragTarget.x = UNLE.locked.x;
-            UNLE.dragTarget.y = UNLE.locked.y;
-        }
-
-        if (UNLE.shouldLock) {
-            UNLE.Container.position.x = UNLE.client.cursor.x - UNLE.width / 2;
-            UNLE.Container.position.y = UNLE.client.cursor.y - UNLE.height / 2;
-        }
+		}
     }
-
-    generateRandomGraph(graph, numEdges, numNodes) {
-
-        // Add nodes to the graph
-        for (var i = 1; i <= numNodes; i++) {
-            graph.add_node(i);
-        }
-
-        // Connect the nodes randomly
-        var connectedNodes = new Set();
-        for (var i = 1; i <= numNodes; i++) {
-            var nodeId = i;
-
-            // Connect the current node with a random previously connected node
-            if (connectedNodes.size > 0) {
-                var randomNodeId = Array.from(connectedNodes)[Math.floor(Math.random() * connectedNodes.size)];
-                graph.add_edge(nodeId, randomNodeId);
-            }
-
-            connectedNodes.add(nodeId);
-        }
-
-        // Add additional random edges if required
-        var remainingEdges = numEdges - numNodes + 1;
-        while (remainingEdges > 0) {
-            var sourceNodeId = Math.floor(Math.random() * numNodes) + 1;
-            var targetNodeId = Math.floor(Math.random() * numNodes) + 1;
-
-            if (sourceNodeId !== targetNodeId && graph.edges == undefined) {
-                graph.add_edge(sourceNodeId, targetNodeId);
-                remainingEdges--;
-                continue
-            }
-
-            // Avoid self-loops and duplicate edges
-            if (sourceNodeId !== targetNodeId && !UNLE.edgeExists(graph.edges, sourceNodeId, targetNodeId)) {
-                graph.add_edge(sourceNodeId, targetNodeId);
-                remainingEdges--;
-            }
-        }
-    }
-
+    
     static edgeExists(edges, source, target) {
         for (var i = 0; i < edges.length; i++) {
             var edge = edges[i];
@@ -416,46 +359,18 @@ class UNLE {
         return false;
     }
 
-    static kamadaKawai() {
-        //TODO: implement
-    }
-
-    static forceAtlas2() {
-        // TODO: implement
-    }
-
     static cool(t) {
-        return Math.max(t*0.999999, 0.001);
+        return t - 0.1;
     }
 
     static sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    static async main() {
+    static main() {
         UNLE.LayoutAlgorithm();
 
-        UNLE.drawLines();
-
         requestAnimationFrame(UNLE.main);
-    }
-
-    static async debugMain() {
-        // This might slow us down even when we don't need to debug...
-        UNLE.DisplayDebug();
-        // -
-
-
-        if (UNLE.edgesList != []) {
-            UNLE.LayoutAlgorithm();
-        }
-
-        if (UNLE.dragTarget != null) {
-            UNLE.dragTarget.x = UNLE.locked.x;
-            UNLE.dragTarget.y = UNLE.locked.y;
-        }
-
-        UNLE.drawLines();
     }
 
     // |-------------------------|
@@ -466,8 +381,8 @@ class UNLE {
         const x = UNLE.randomX()
         const y = UNLE.randomY()
         UNLE.createNode(x, y, id, value, colour)
-        UNLE.nodesEdgeNum[id] = 0
-        UNLE.k = Math.sqrt((UNLE.width * UNLE.height) / UNLE.nodesEdgeNum.length)
+        UNLE.Nodes_Weight[id] = 0
+        UNLE.k = Math.sqrt((UNLE.width * UNLE.height) / UNLE.Nodes_Weight.length)
     }
 
     // TODO: if node1 and node2 are the same then the edge should be implemented in a special way... add this.
@@ -481,21 +396,21 @@ class UNLE {
         UNLE.edgesListIndexes.push([nodeNames.indexOf(nodeID1), nodeNames.indexOf(nodeID2)])
 
         UNLE.edgesList.push([nodeID1, nodeID2, length])
-        UNLE.nodesEdgeNum[nodeID1] += 1
-        UNLE.nodesEdgeNum[nodeID2] += 1
-
-        // Create nodesEdgeNumList
-        /*
-        const nodesEdgeNumList = new Array(UNLE.NodesContainer.children.length)
-
-        for (let i = 0; i < nodesEdgeNumList.length; i++) {
-            nodesEdgeNumList[i] = UNLE.nodesEdgeNum[UNLE.NodesContainer.children[i].name]
-        }
-        */
-
-        const line = new PIXI.Sprite(UNLE.lineT);
-        line.width = UNLE.edgeWidth;
+        UNLE.Nodes_Weight[nodeID1] += 1
+        UNLE.Nodes_Weight[nodeID2] += 1
+        
+        // Add edge to rendering
+        const line = UNLE.lineG.clone()
+        line.pivot.set(0.5, 0)
         UNLE.LinesContainer.addChild(line);
+        
+        
+        // Add triangles to node
+        if (UNLE.directedEdges) {
+			const sprite = new PIXI.Sprite(UNLE.Triangle_Texture)
+			sprite.anchor.set(.5);
+			UNLE.Triangles_Container.addChild(sprite);
+		}
     }
 
     //TODO: make this more user friendly...
@@ -535,8 +450,8 @@ class UNLE {
         else
             return;
 
-        UNLE.nodesEdgeNum[node1] -= 1;
-        UNLE.nodesEdgeNum[node2] -= 1;
+        UNLE.Nodes_Weight[node1] -= 1;
+        UNLE.Nodes_Weight[node2] -= 1;
     }
 
     traverse_nodes(node1, node2) {
@@ -573,15 +488,15 @@ class UNLE {
 
         nodes.forEach((node) => {
             UNLE.createNode(UNLE.randomX(), UNLE.randomY(), node, node);
-            UNLE.nodesEdgeNum[node] = 0;
+            UNLE.Nodes_Weight[node] = 0;
         });
 
         edges.forEach((edge) => {
             if (edge.length !== 2)
                 return;
             UNLE.edgesList.push([edge[0], edge[1], 100])
-            UNLE.nodesEdgeNum[edge[0]] += 1
-            UNLE.nodesEdgeNum[edge[1]] += 1
+            UNLE.Nodes_Weight[edge[0]] += 1
+            UNLE.Nodes_Weight[edge[1]] += 1
         });
     }
 

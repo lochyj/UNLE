@@ -4,11 +4,11 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js" integrity="sha512-Ch/O6kL8BqUwAfCF7Ie5SX1Hin+BJgYH4pNjRqXdTEqMsis1TUYg+j6nnI9uduPjGaj7DN4UKCZgpvoExt6dkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     </head>
     <body>
-        <canvas id="canvas"></canvas>
+        <div id="canvas"></div>
         <script type="module">
             import UNLE from '../src/main.js'
 
-            const graph = new UNLE({
+            let graph = new UNLE({
                 "width": 1200,
                 "height": 900,
                 "canvas": document.getElementById("canvas"),
@@ -19,10 +19,8 @@
                 "edge_width": 5,
             });
 
-            console.log("Graph Object: ", graph)
-
-            let nodes = 100;
-            let edges = 115;
+            let nodes = 1000;
+            let edges = 10000;
 
             graph.generateRandomGraph(graph, edges, nodes);
 
