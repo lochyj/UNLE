@@ -3,7 +3,7 @@
 
 UNLE is an acronym for Unconstrained Node Layout Engine.
 
-![Very large graph](./example.png)
+![Very large graph](./Triangle.png)
 
 Click [here](https://rotaryviper.github.io/UNLE/) for a demo.
 
